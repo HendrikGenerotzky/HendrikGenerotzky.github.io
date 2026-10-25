@@ -158,10 +158,27 @@ main section[id] { scroll-margin-top: var(--header-h, 76px); }
 
 /* ---------- INTRO ---------- */
 .intro { padding-block: clamp(96px, 14vw, 180px) clamp(72px, 10vw, 140px); }
+.motto { margin: 0 0 clamp(36px, 5vw, 64px); }
+.motto blockquote { margin: 0; }
+.motto p {
+  position: relative; margin: 0;
+  font: 800 clamp(54px, 9.5vw, 156px)/.9 var(--display); font-variation-settings: "wdth" 70;
+  text-transform: uppercase; letter-spacing: -.01em;
+}
+.motto .q-open, .motto .q-close { color: var(--signal); }
+.motto .q-open { position: absolute; right: 100%; padding-right: .04em; }
+html.anim .motto .w { color: var(--mist); transition: color .45s var(--ease); }
+html.anim .motto .w.lit { color: var(--ink); }
+.motto .lab { position: relative; display: inline-block; }
+.motto .lab::after {
+  content: ""; position: absolute; left: 0; right: .18em; bottom: -.04em; height: .085em; background: var(--signal);
+  transform: scaleX(1); transform-origin: left; transition: transform .8s var(--ease);
+}
+html.anim .motto:not(.done) .lab::after { transform: scaleX(0); }
 .statement {
-  font-family: var(--display); font-weight: 600; font-variation-settings: "wdth" 88;
-  font-size: clamp(28px, 3.6vw, 54px); line-height: 1.1; letter-spacing: -.01em;
-  max-width: 27em; margin: 0; text-wrap: pretty;
+  font-family: var(--sans); font-weight: 500; font-variation-settings: "wdth" 94;
+  font-size: clamp(20px, 2.1vw, 30px); line-height: 1.42; letter-spacing: -.005em;
+  max-width: 36em; margin: 0; text-wrap: pretty;
 }
 .facts { list-style: none; margin: clamp(56px, 8vw, 110px) 0 0; padding: 0; border-top: 1px solid var(--line); }
 .facts li { display: grid; grid-template-columns: clamp(130px, 16vw, 230px) minmax(0, 1fr); align-items: baseline; gap: clamp(16px, 3vw, 48px); border-bottom: 1px solid var(--line); padding-block: 18px; }
@@ -299,6 +316,8 @@ body { -webkit-tap-highlight-color: transparent; }
 
 @media (max-width: 860px) {
   body { font-size: 17px; }
+  .motto .q-open { position: static; padding-right: 0; }
+  .motto p { font-size: min(11.4vw, 72px); }
   .chrome { align-items: center; padding-top: calc(env(safe-area-inset-top, 0px) + 12px); padding-bottom: 10px; }
   .chrome nav { display: none; }
   .menu-btn { display: block; }

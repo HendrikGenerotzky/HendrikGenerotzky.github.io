@@ -598,6 +598,19 @@
     ticks.forEach((t, i) => t.classList.toggle("on", i <= active));
   };
 
+  /* ---------- Motto: words fill in while it scrolls through the viewport ---------- */
+  const motto = document.querySelector(".motto");
+  const mottoWords = motto ? [...motto.querySelectorAll(".w")] : [];
+  const updateMotto = () => {
+    if (!motto) return;
+    if (reduce) { mottoWords.forEach((w) => w.classList.add("lit")); motto.classList.add("done"); return; }
+    const r = motto.getBoundingClientRect(), vh = window.innerHeight;
+    const p = clamp((vh * 0.88 - r.top) / (vh * 0.5));
+    const lit = Math.round(p * mottoWords.length);
+    mottoWords.forEach((w, i) => w.classList.toggle("lit", i < lit));
+    motto.classList.toggle("done", lit >= mottoWords.length);
+  };
+
   /* ---------- Reveals and count-up ---------- */
   const io = new IntersectionObserver((entries) => {
     entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); } });
@@ -634,7 +647,7 @@
   });
 
   /* ---------- Wiring ---------- */
-  const onScroll = () => { updateHero(); updateJourney(); updateHeader(); };
+  const onScroll = () => { updateHero(); updateJourney(); updateHeader(); updateMotto(); };
   if (lenis) lenis.on("scroll", onScroll);
   window.addEventListener("scroll", onScroll, { passive: true });
   let rt;
