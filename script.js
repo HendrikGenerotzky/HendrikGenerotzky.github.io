@@ -309,23 +309,25 @@
     const hdrH = document.querySelector(".chrome").offsetHeight;
     const minTop = Math.max(hdrH + 16, tl && tl.offsetParent ? tl.offsetTop + tl.offsetHeight + 18 : 0);
     const maxBottom = H - (stacked ? 110 : H < 500 ? 70 : 170); // keep clear of counters, feed and hints
-    const preferTop = stacked ? minTop : H * 0.26;
     // each headline must stay entirely in its own half, so the KI layer splits them cleanly at 50 %
     const mid = W / 2, midGap = Math.max(10, W * 0.025);
     const fitsLeft = (t, w, h) => { const s2 = sil(t, t + h); return gutL + w <= Math.min(s2 ? s2.left - gap : W, mid - midGap); };
     const fitsRight = (t, w, h) => { const s2 = sil(t, t + h); return W - gutR - w >= Math.max(s2 ? s2.right + gap : 0, mid + midGap); };
 
-    let best = null;
-    for (let fs = Math.floor(fsMax); fs >= 24 && !best; fs -= 1) {
-      const k = fs / REF, wL = wL0 * k, wR = wR0 * k, hL = hL0 * k, hR = hR0 * k;
-      {
-        if (wL + wR + gap * 2 > W - gutL - gutR) continue;
-        let cand = null;
-        for (let t = minTop; t + Math.max(hL, hR) <= maxBottom; t += 4) {
-          if (fitsLeft(t, wL, hL) && fitsRight(t, wR, hR) && (!cand || Math.abs(t - preferTop) < Math.abs(cand - preferTop))) cand = t;
-        }
-        if (cand !== null) best = { fs, t: cand, rTop: cand };
+    // Largest size first; then trade up to 10 % of size for a position level with the face (desktop)
+    let best = null, fsBest = 0;
+    for (let fs = Math.floor(fsMax); fs >= 24; fs -= 1) {
+      if (fsBest && fs < fsBest * 0.9) break;
+      const k = fs / REF, wL = wL0 * k, wR = wR0 * k, hL = hL0 * k, hR = hR0 * k, hMax = Math.max(hL, hR);
+      if (wL + wR + gap * 2 > W - gutL - gutR) continue;
+      const prefer = stacked ? minTop : pBox.y + pBox.h * 0.34 - hMax / 2;
+      for (let t = minTop; t + hMax <= maxBottom; t += 4) {
+        if (!fitsLeft(t, wL, hL) || !fitsRight(t, wR, hR)) continue;
+        if (!fsBest) fsBest = fs;
+        const score = Math.abs(t - prefer) + (fsBest - fs) * 3;
+        if (!best || score < best.score) best = { fs, t, rTop: t, score };
       }
+      if (stacked && best) break;
     }
     if (!best) best = { fs: 24, t: minTop, rTop: minTop + 3 * 24 };
     hero.style.setProperty("--hl-fs", best.fs + "px");

@@ -86,7 +86,7 @@ main section[id] { scroll-margin-top: var(--header-h, 76px); }
 .hero-ai { z-index: 2; }
 .portrait {
   position: absolute; left: 50%; bottom: 0;
-  height: min(74%, 900px); width: auto; max-width: none;
+  height: min(64%, 780px); width: auto; max-width: none;
   transform: translateX(-50%);
   user-select: none;
 }
@@ -345,7 +345,7 @@ body { -webkit-tap-highlight-color: transparent; }
 
 /* Phones held upright: headlines stacked above the portrait */
 @media (max-width: 860px) and (orientation: portrait) {
-  .portrait { height: min(64%, 640px); }
+  .portrait { height: min(54%, 540px); }
   .hl { font-size: var(--hl-fs, clamp(32px, 12vw, 80px)); }
   .hero { --hl-top: 11%; }
   .hud-scroll { bottom: 20px; }
@@ -356,7 +356,7 @@ body { -webkit-tap-highlight-color: transparent; }
 
 /* Phones held sideways: side-by-side layout like on desktop, scaled to the short screen */
 @media (max-width: 860px) and (orientation: landscape) {
-  .portrait { height: 84%; }
+  .portrait { height: 74%; }
   .hl { font-size: var(--hl-fs, clamp(36px, 14vh, 96px)); }
   .hero { --hl-top: 20%; }
   .hud-scroll, .hud-br, .hud-hint { bottom: 12px; }
