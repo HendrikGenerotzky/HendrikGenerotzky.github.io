@@ -162,7 +162,7 @@ main section[id] { scroll-margin-top: var(--header-h, 76px); }
 .motto blockquote { margin: 0; }
 .motto p {
   position: relative; margin: 0;
-  font: 800 clamp(54px, 9.5vw, 156px)/.9 var(--display); font-variation-settings: "wdth" 70;
+  font: 800 clamp(48px, 7.4vw, 132px)/.9 var(--display); font-variation-settings: "wdth" 70;
   text-transform: uppercase; letter-spacing: -.01em;
 }
 .motto .q-open, .motto .q-close { color: var(--signal); }
@@ -317,7 +317,7 @@ body { -webkit-tap-highlight-color: transparent; }
 @media (max-width: 860px) {
   body { font-size: 17px; }
   .motto .q-open { position: static; padding-right: 0; }
-  .motto p { font-size: min(11.4vw, 72px); }
+  .motto p { font-size: min(8.6vw, 64px); }
   .chrome { align-items: center; padding-top: calc(env(safe-area-inset-top, 0px) + 12px); padding-bottom: 10px; }
   .chrome nav { display: none; }
   .menu-btn { display: block; }
