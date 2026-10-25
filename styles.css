@@ -314,6 +314,10 @@ html.anim .motto:not(.done) .lab::after { transform: scaleX(0); }
 /* ---------- FOOTER ---------- */
 .foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 24px calc(24px + env(safe-area-inset-bottom, 0px)); background: var(--night); color: var(--mist); font-size: 14px; }
 
+.privacy { margin: 0; max-width: 62ch; font-size: 13px; line-height: 1.5; color: var(--mist); }
+.privacy a { color: var(--paper); text-decoration-color: var(--signal); text-underline-offset: 3px; }
+.privacy a:hover { color: var(--signal); }
+
 /* ---------- Reveal (content stays visible; only a short slide) ---------- */
 html.anim .rise { transform: translateY(28px); transition: transform 1s var(--ease); }
 html.anim .rise.in { transform: none; }
