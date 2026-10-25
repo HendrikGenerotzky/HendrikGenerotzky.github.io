@@ -2,4 +2,4 @@
 
 Persönliche Website mit Vita und Werdegang, gehostet über GitHub Pages.
 
-https://hendrikgenerotzky.github.io
+https://hendrikgenerotzky.de
