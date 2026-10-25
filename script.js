@@ -166,10 +166,10 @@
 
   // Concepts that live in the portrait graph from the start.
   const HUBS = [
-    { label: "Maschine", at: [0.30, 0.22] }, { label: "Auftrag", at: [0.66, 0.26] },
-    { label: "Werkzeug", at: [0.44, 0.42] }, { label: "Störung", at: [0.72, 0.52] },
-    { label: "Maßnahme", at: [0.26, 0.60] }, { label: "Erfahrung", at: [0.55, 0.78] },
-    { label: "Prozess", at: [0.82, 0.88] }
+    { label: "Maschine", at: [0.35, 0.22] }, { label: "Auftrag", at: [0.62, 0.26] },
+    { label: "Werkzeug", at: [0.46, 0.42] }, { label: "Störung", at: [0.66, 0.52] },
+    { label: "Maßnahme", at: [0.32, 0.60] }, { label: "Erfahrung", at: [0.54, 0.78] },
+    { label: "Prozess", at: [0.74, 0.88] }
   ];
   // Shop-floor artefacts that enrich the graph, one after another while scrolling.
   // at = cluster centre as a fraction of the hero (always on the KI side, x > 0.5).
