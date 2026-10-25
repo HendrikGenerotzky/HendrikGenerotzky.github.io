@@ -407,7 +407,7 @@
   const aiLayer = document.querySelector(".hero-ai");
   const lensEl = document.querySelector(".lens");
   const lens = { x: 0, y: 0, tx: 0, ty: 0, r: 0, tr: 0, on: false };
-  const lensRadius = () => (narrow() ? 96 : 150);
+  const lensRadius = () => (narrow() ? 96 : 75);
   const overPortrait = (x, y) => {
     if (!pBox || !alpha) return false;
     if (x < pBox.x || x > pBox.x + pBox.w || y < pBox.y || y > pBox.y + pBox.h) return false;
