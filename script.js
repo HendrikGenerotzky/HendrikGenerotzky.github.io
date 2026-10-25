@@ -117,13 +117,9 @@
   // Shop-floor artefacts that enrich the graph, one after another while scrolling.
   // at = cluster centre as a fraction of the hero (always on the KI side, x > 0.5).
   const ARTIFACTS = [
-    { name: "Arbeitsanweisung Montage", kind: "PDF, 14 Seiten", hub: "Prozess", n: 120, at: [0.80, 0.14] },
-    { name: "SAP-Materialstamm", kind: "Export, 2.380 Zeilen", hub: "Auftrag", n: 170, at: [0.95, 0.25] },
-    { name: "Störmeldungen 2024", kind: "Ticketsystem", hub: "Störung", n: 150, at: [0.60, 0.10] },
-    { name: "Wartungsprotokoll Fräse 3", kind: "Protokoll", hub: "Maschine", n: 110, at: [0.90, 0.80] },
-    { name: "Gespräch mit der Schichtleitung", kind: "Gemba-Notiz", hub: "Erfahrung", n: 90, at: [0.68, 0.88] },
-    { name: "Benchmarking-Kennzahlen", kind: "Datensatz, 20 Betriebe", hub: "Maßnahme", n: 140, at: [0.97, 0.66] },
-    { name: "Produktionsontologie", kind: "OWL-Datei", hub: "Werkzeug", n: 190, at: [0.60, 0.62] }
+    { name: "Arbeitsanweisung Montage", kind: "PDF, 14 Seiten", hub: "Prozess", n: 190, at: [0.62, 0.10] },
+    { name: "Störmeldungen 2024", kind: "Ticketsystem", hub: "Störung", n: 230, at: [0.92, 0.70] },
+    { name: "Gespräch mit der Schichtleitung", kind: "Gemba-Notiz", hub: "Erfahrung", n: 160, at: [0.66, 0.88] }
   ];
 
   let W = 0, H = 0, dpr = 1;
@@ -246,40 +242,70 @@
     });
   };
 
-  /* Keep both headlines clear of the portrait silhouette, so no letter sits on hair or blazer. */
+  /* Size both three-line headlines as large as possible without touching the portrait,
+     the counters, the feed or each other. Searches font size and vertical position together.
+     Desktop: both blocks share one top, left and right of the portrait. Phones: stacked above it. */
   const fitHeadlines = () => {
     if (!alpha || !pBox) return;
-    hero.style.removeProperty("--hl-fs");
-    const base = [...hero.querySelectorAll(".hero-base .hl")];
+    const all = [...hero.querySelectorAll(".hl")];
+    const L = hero.querySelector(".hero-base .hl-left"), Rh = hero.querySelector(".hero-base .hl-right");
     const hr = hero.getBoundingClientRect();
-    const silhouette = (top, bottom) => {
-      let minX = Infinity, maxX = -Infinity;
-      const y0 = Math.max(0, Math.floor((top - pBox.y) / pBox.h * ah));
-      const y1 = Math.min(ah - 1, Math.ceil((bottom - pBox.y) / pBox.h * ah));
-      for (let y = y0; y <= y1; y++) for (let x = 0; x < aw; x++) {
-        if (alpha[y * aw + x] > 40) { if (x < minX) minX = x; if (x > maxX) maxX = x; }
-      }
-      if (minX === Infinity) return null;
-      return { left: pBox.x + minX / aw * pBox.w, right: pBox.x + (maxX + 1) / aw * pBox.w };
-    };
-    let fs = parseFloat(getComputedStyle(base[0]).fontSize);
-    const gap = Math.max(16, W * 0.018);
-    for (let pass = 0; pass < 4; pass++) {
-      let scale = 1;
-      base.forEach((el) => {
-        const r = el.getBoundingClientRect();
-        const top = r.top - hr.top, bottom = r.bottom - hr.top;
-        const width = Math.max(...[...el.children].map((s) => s.getBoundingClientRect().width));
-        const sil = silhouette(top, bottom);
-        if (!sil) return;
-        const isLeft = el.classList.contains("hl-left");
-        const avail = isLeft ? sil.left - gap - (r.left - hr.left) : (r.right - hr.left) - sil.right - gap;
-        if (avail < width) scale = Math.min(scale, Math.max(avail, 0) / width);
-      });
-      if (scale >= 0.995) break;
-      fs = Math.max(26, fs * scale * 0.99);
-      hero.style.setProperty("--hl-fs", fs.toFixed(1) + "px");
+    const stacked = narrow();
+    all.forEach((el) => (el.style.top = ""));
+    hero.style.removeProperty("--hl-fs");
+    const fsMax = parseFloat(getComputedStyle(L).fontSize);
+
+    // measure at a reference size; width and height scale linearly with font size
+    const REF = 100;
+    hero.style.setProperty("--hl-fs", REF + "px");
+    const widest = (el) => Math.max(...[...el.children].map((sp) => sp.getBoundingClientRect().width));
+    const wL0 = widest(L), wR0 = widest(Rh), hL0 = L.getBoundingClientRect().height, hR0 = Rh.getBoundingClientRect().height;
+
+    // portrait silhouette per row, in hero coordinates
+    const rowMin = new Float32Array(ah).fill(Infinity), rowMax = new Float32Array(ah).fill(-Infinity);
+    for (let y = 0; y < ah; y++) for (let x = 0; x < aw; x++) {
+      if (alpha[y * aw + x] > 40) { const hx = pBox.x + x / aw * pBox.w; if (hx < rowMin[y]) rowMin[y] = hx; const hx2 = pBox.x + (x + 1) / aw * pBox.w; if (hx2 > rowMax[y]) rowMax[y] = hx2; }
     }
+    const sil = (top, bottom) => {
+      let mn = Infinity, mx = -Infinity;
+      const y0 = Math.max(0, Math.floor((top - pBox.y) / pBox.h * ah)), y1 = Math.min(ah - 1, Math.ceil((bottom - pBox.y) / pBox.h * ah));
+      for (let y = y0; y <= y1; y++) { if (rowMin[y] < mn) mn = rowMin[y]; if (rowMax[y] > mx) mx = rowMax[y]; }
+      return mn === Infinity ? null : { left: mn, right: mx };
+    };
+
+    const gap = Math.max(16, W * 0.02);
+    const gutL = parseFloat(getComputedStyle(L).left) || 20;
+    const gutR = parseFloat(getComputedStyle(Rh).right) || 20;
+    const tl = hero.querySelector(".hud-tl");
+    const minTop = tl && tl.offsetParent ? tl.offsetTop + tl.offsetHeight + 18 : 84;
+    const maxBottom = H - (stacked ? 110 : 170); // keep clear of counters, feed and hints
+    const preferTop = stacked ? minTop : H * 0.26;
+    const fitsLeft = (t, w, h) => { const s2 = sil(t, t + h); return gutL + w <= (s2 ? s2.left - gap : W - gutR); };
+    const fitsRight = (t, w, h) => { const s2 = sil(t, t + h); return W - gutR - w >= (s2 ? s2.right + gap : gutL); };
+
+    let best = null;
+    for (let fs = Math.floor(fsMax); fs >= 24 && !best; fs -= 1) {
+      const k = fs / REF, wL = wL0 * k, wR = wR0 * k, hL = hL0 * k, hR = hR0 * k;
+      if (stacked) {
+        if (wL > W - gutL - gutR || wR > W - gutL - gutR) continue;
+        for (let t = minTop; ; t += 4) {
+          const rTop = t + hL + fs * 0.18;
+          if (rTop + hR > maxBottom) break;
+          if (fitsLeft(t, wL, hL) && fitsRight(rTop, wR, hR)) { best = { fs, t, rTop }; break; }
+        }
+      } else {
+        if (wL + wR + gap * 2 > W - gutL - gutR) continue;
+        let cand = null;
+        for (let t = minTop; t + Math.max(hL, hR) <= maxBottom; t += 4) {
+          if (fitsLeft(t, wL, hL) && fitsRight(t, wR, hR) && (!cand || Math.abs(t - preferTop) < Math.abs(cand - preferTop))) cand = t;
+        }
+        if (cand !== null) best = { fs, t: cand, rTop: cand };
+      }
+    }
+    if (!best) best = { fs: 24, t: minTop, rTop: minTop + 3 * 24 };
+    hero.style.setProperty("--hl-fs", best.fs + "px");
+    hero.querySelectorAll(".hl-left").forEach((el) => (el.style.top = best.t + "px"));
+    hero.querySelectorAll(".hl-right").forEach((el) => (el.style.top = best.rTop + "px"));
     const rr = hero.querySelector(".hero-ai .hl-right").getBoundingClientRect();
     hlBox = { left: rr.left - hr.left, right: rr.right - hr.left, top: rr.top - hr.top, bottom: rr.bottom - hr.top };
   };
@@ -289,13 +315,14 @@
   const drawGraph = (now) => {
     if (!gReady) return;
     gctx.clearRect(0, 0, W, H);
-    const faceCount = Math.floor(face.length * state.faceF);
+    const faceF = Math.max(state.faceF, lens.r > 1 ? 1 : 0);
+    const faceCount = Math.floor(face.length * faceF);
 
     // edges
     gctx.lineWidth = 0.7;
     gctx.strokeStyle = "rgba(236,238,241,.22)";
     gctx.beginPath();
-    faceEdges.forEach(([a, b]) => { if (a < faceCount && b < faceCount || state.faceF >= 1) { gctx.moveTo(face[a].x, face[a].y); gctx.lineTo(face[b].x, face[b].y); } });
+    faceEdges.forEach(([a, b]) => { if (a < faceCount && b < faceCount) { gctx.moveTo(face[a].x, face[a].y); gctx.lineTo(face[b].x, face[b].y); } });
     clusters.forEach((c, k) => {
       const vis = nodeVisibleCount(c, state.steps[k]);
       c.edges.forEach(([a, b, m]) => { if (m < vis) { gctx.moveTo(c.pts[a].x, c.pts[a].y); gctx.lineTo(c.pts[b].x, c.pts[b].y); } });
@@ -319,7 +346,7 @@
 
     // nodes
     gctx.fillStyle = "rgba(236,238,241,.85)";
-    for (let i = 0; i < faceCount || (state.faceF >= 1 && i < face.length); i++) {
+    for (let i = 0; i < faceCount; i++) {
       const n = face[i]; const r = 1 + 0.5 * Math.sin(now * 0.002 + n.p);
       gctx.fillRect(n.x - r * 0.75, n.y - r * 0.75, r * 1.5, r * 1.5);
     }
@@ -336,7 +363,7 @@
     });
 
     // query packets travelling through the portrait graph
-    if (state.faceF > 0.5) {
+    if (faceF > 0.5) {
       gctx.fillStyle = "#F26B1D";
       packets.forEach((pk) => {
         const e = faceEdges[pk.e]; if (!e) return;
@@ -375,8 +402,59 @@
     pk.t = 0;
   });
 
+  /* Lens: before the scroll animation starts, the KI layer shows through a circle
+     wherever the pointer (or a finger) is over the portrait. */
+  const aiLayer = document.querySelector(".hero-ai");
+  const lensEl = document.querySelector(".lens");
+  const lens = { x: 0, y: 0, tx: 0, ty: 0, r: 0, tr: 0, on: false };
+  const lensRadius = () => (narrow() ? 96 : 150);
+  const overPortrait = (x, y) => {
+    if (!pBox || !alpha) return false;
+    if (x < pBox.x || x > pBox.x + pBox.w || y < pBox.y || y > pBox.y + pBox.h) return false;
+    const ax = Math.floor((x - pBox.x) / pBox.w * aw), ay = Math.floor((y - pBox.y) / pBox.h * ah);
+    return alpha[Math.min(ah - 1, ay) * aw + Math.min(aw - 1, ax)] > 40;
+  };
+  const lensAllowed = () => state.wipe >= 0.995 && !reduce;
+  const pointAt = (cx, cy) => {
+    const hr = hero.getBoundingClientRect();
+    const x = cx - hr.left, y = cy - hr.top;
+    lens.tx = x; lens.ty = y;
+    const inside = lensAllowed() && overPortrait(x, y);
+    if (inside && !lens.on) { lens.x = x; lens.y = y; }
+    lens.on = inside;
+    lens.tr = inside ? lensRadius() : 0;
+    if (inside) hero.classList.add("revealed");
+  };
+  const lensOff = () => { lens.on = false; lens.tr = 0; };
+  hero.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") pointAt(e.clientX, e.clientY); });
+  hero.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") lensOff(); });
+  hero.addEventListener("touchstart", (e) => { const t = e.touches[0]; if (t) pointAt(t.clientX, t.clientY); }, { passive: true });
+  hero.addEventListener("touchmove", (e) => { const t = e.touches[0]; if (t) pointAt(t.clientX, t.clientY); }, { passive: true });
+  hero.addEventListener("touchend", lensOff, { passive: true });
+  hero.addEventListener("touchcancel", lensOff, { passive: true });
+  hero.querySelectorAll("img").forEach((img) => img.addEventListener("contextmenu", (e) => e.preventDefault()));
+
+  const stepLens = () => {
+    if (!lensAllowed()) { lens.tr = 0; lens.on = false; }
+    lens.x += (lens.tx - lens.x) * 0.22;
+    lens.y += (lens.ty - lens.y) * 0.22;
+    lens.r += (lens.tr - lens.r) * 0.18;
+    if (lens.r < 0.6 && lens.tr === 0) lens.r = 0;
+    if (state.wipe < 0.995) {
+      aiLayer.style.clipPath = ""; aiLayer.style.webkitClipPath = "";
+      lensEl.style.opacity = "0";
+      return;
+    }
+    const cp = `circle(${lens.r.toFixed(1)}px at ${lens.x.toFixed(1)}px ${lens.y.toFixed(1)}px)`;
+    aiLayer.style.clipPath = cp; aiLayer.style.webkitClipPath = cp;
+    const d = lens.r * 2;
+    lensEl.style.width = d + "px"; lensEl.style.height = d + "px";
+    lensEl.style.transform = `translate3d(${(lens.x - lens.r).toFixed(1)}px,${(lens.y - lens.r).toFixed(1)}px,0)`;
+    lensEl.style.opacity = lens.r > 2 ? "1" : "0";
+  };
+
   // Scroll timeline of the hero, as fractions of the pinned distance.
-  const WIPE = [0.03, 0.22], ENRICH = [0.25, 0.95];
+  const WIPE = [0.03, 0.30], ENRICH = [0.34, 0.96];
 
   const updateHero = () => {
     const total = scene.offsetHeight - window.innerHeight;
@@ -432,7 +510,10 @@
   const heroLoop = (now) => {
     const r = scene.getBoundingClientRect();
     const visible = r.bottom > 0 && r.top < window.innerHeight;
-    if (visible && state.wipe < 0.995 && !document.hidden) { stepPackets(); drawGraph(now); }
+    if (visible && !document.hidden) {
+      stepLens();
+      if (state.wipe < 0.995 || lens.r > 1) { stepPackets(); drawGraph(now); }
+    }
     requestAnimationFrame(heroLoop);
   };
 
