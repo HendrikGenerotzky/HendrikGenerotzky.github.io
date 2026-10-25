@@ -7,7 +7,35 @@
   const stackedMode = () => narrow() && window.innerHeight > window.innerWidth;
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const ease = (t) => 1 - Math.pow(1 - t, 3);
-  const fmt = (n) => Math.round(n).toLocaleString("de-DE");
+  /* ---------- Language (English default, German on request) ---------- */
+  const I18N = window.I18N || { de: {}, strings: {} };
+  let lang = "en";
+  try { const saved = localStorage.getItem("lang"); if (saved === "de" || saved === "en") lang = saved; } catch (e) {}
+  const T = () => I18N.strings[lang] || I18N.strings.en;
+  const fmt = (n) => Math.round(n).toLocaleString(T().locale || "en-US");
+  const i18nEls = [...document.querySelectorAll("[data-i18n]")];
+  const EN = {};
+  i18nEls.forEach((el) => { const k = el.dataset.i18n; if (!(k in EN)) EN[k] = el.innerHTML; });
+  const attrEls = [...document.querySelectorAll("[data-i18n-attr]")];
+  attrEls.forEach((el) => { const [attr] = el.dataset.i18nAttr.split(":"); el.dataset.i18nEn = el.getAttribute(attr) || ""; });
+  const metaDesc = document.querySelector('meta[name="description"]');
+  const metaEn = metaDesc ? metaDesc.content : "";
+  const tr = (k) => (lang === "de" && I18N.de[k] != null ? I18N.de[k] : EN[k]);
+  const applyLang = () => {
+    document.documentElement.lang = lang;
+    i18nEls.forEach((el) => { const v = tr(el.dataset.i18n); if (v != null && el.innerHTML !== v) el.innerHTML = v; });
+    attrEls.forEach((el) => {
+      const [attr, key] = el.dataset.i18nAttr.split(":");
+      el.setAttribute(attr, lang === "de" && I18N.de[key] != null ? I18N.de[key] : el.dataset.i18nEn);
+    });
+    if (metaDesc) metaDesc.content = lang === "de" ? I18N.de["meta.description"] || metaEn : metaEn;
+    const sw = document.querySelector(".lang");
+    if (sw) {
+      sw.dataset.active = lang;
+      sw.querySelectorAll(".lang-opt").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+    }
+  };
+  applyLang();
   document.documentElement.classList.add("anim");
 
   /* ---------- Smooth scrolling ---------- */
@@ -209,7 +237,7 @@
       const tx = pBox.x + h.at[0] * pBox.w, ty = pBox.y + h.at[1] * pBox.h;
       let best = 0, bd = Infinity;
       face.forEach((n, i) => { const d = (n.x - tx) ** 2 + (n.y - ty) ** 2; if (d < bd) { bd = d; best = i; } });
-      return { i: best, label: h.label };
+      return { i: best, key: h.label, k: HUBS.indexOf(h) };
     });
 
     // Artefact clusters: blobs of nodes, ordered from the centre outwards so they grow.
@@ -226,7 +254,7 @@
       }
       pts.sort((p, q) => ((p.x - cx) ** 2 + (p.y - cy) ** 2) - ((q.x - cx) ** 2 + (q.y - cy) ** 2));
       const edges = knn(pts, 3, R * 0.5).map(([i, j]) => [i, j, Math.max(i, j)]);
-      const hub = hubs.find((h) => h.label === a.hub);
+      const hub = hubs.find((h) => h.key === a.hub);
       return { a, cx, cy, pts, edges, hub, bridges: [] };
     });
     // A few bridges from each cluster into the existing graph (portrait or earlier clusters).
@@ -253,19 +281,22 @@
   let artEls = [], feedEls = [];
   const buildArtifacts = () => {
     artLayer.innerHTML = ""; feed.innerHTML = "";
-    artEls = ARTIFACTS.map((a) => {
+    artEls = ARTIFACTS.map((a, k) => {
+      const [name, kind] = T().artifacts[k] || [a.name, a.kind];
       const el = document.createElement("div");
       el.className = "artifact";
       el.innerHTML = `<i></i><b></b><small></small>`;
-      el.querySelector("b").textContent = a.name;
-      el.querySelector("small").textContent = a.kind;
+      el.querySelector("b").textContent = name;
+      el.querySelector("small").textContent = kind;
       artLayer.appendChild(el);
       return el;
     });
-    feedEls = clusters.map((c) => {
+    feedEls = clusters.map((c, k) => {
       const li = document.createElement("li");
-      li.innerHTML = `<b>+${fmt(c.pts.length)}</b> Knoten<span class="src"> aus „<span></span>“</span>`;
-      li.querySelector(".src span").textContent = c.a.name;
+      const [word, from] = T().feedFrom.split(" ");
+      const q = T().q;
+      li.innerHTML = `<b>+${fmt(c.pts.length)}</b> ${word}<span class="src"> ${from} ${q[0]}<span></span>${q[1]}</span>`;
+      li.querySelector(".src span").textContent = (T().artifacts[k] || [c.a.name])[0];
       feed.appendChild(li);
       return li;
     });
@@ -410,11 +441,12 @@
       gctx.beginPath(); gctx.arc(n.x, n.y, pulse + 4, 0, 6.283); gctx.stroke();
       gctx.fillStyle = "#F26B1D";
       gctx.beginPath(); gctx.arc(n.x, n.y, 3.2, 0, 6.283); gctx.fill();
-      const tw2 = gctx.measureText(h.label).width;
+      const label = T().hubs[h.k] || h.key;
+      const tw2 = gctx.measureText(label).width;
       const flip = n.x + tw2 + 30 > W;
       const bx = flip ? n.x - tw2 - 19 : n.x + 9;
       gctx.fillStyle = "rgba(10,21,34,.85)"; gctx.fillRect(bx, n.y - 8, tw2 + 10, 16);
-      gctx.fillStyle = "#ECEEF1"; gctx.fillText(h.label, bx + 5, n.y + 0.5);
+      gctx.fillStyle = "#ECEEF1"; gctx.fillText(label, bx + 5, n.y + 0.5);
     });
   };
 
@@ -567,8 +599,15 @@
   const cards = [...track.querySelectorAll(".card")];
   const barFill = document.querySelector(".bar i");
   const ticksEl = document.querySelector(".ticks");
-  ticksEl.innerHTML = cards.map((c) => `<li><b>${c.dataset.year}</b><span>${c.dataset.short}</span></li>`).join("");
-  const ticks = [...ticksEl.children];
+  let ticks = [];
+  const renderTicks = () => {
+    ticksEl.innerHTML = cards.map((c) => {
+      const short = lang === "de" && c.dataset.shortDe ? c.dataset.shortDe : c.dataset.short;
+      return `<li><b>${c.querySelector(".year").textContent}</b><span>${short}</span></li>`;
+    }).join("");
+    ticks = [...ticksEl.children];
+  };
+  renderTicks();
   const aiIndex = cards.findIndex((c) => c.dataset.year === "2021");
   document.querySelector(".progress").style.setProperty("--phase-at", `calc(${(aiIndex / (cards.length - 1)) * 100}% - 3em)`);
   let travel = 0;
@@ -597,9 +636,9 @@
 
   /* ---------- Motto: words fill in while it scrolls through the viewport ---------- */
   const motto = document.querySelector(".motto");
-  const mottoWords = motto ? [...motto.querySelectorAll(".w")] : [];
   const updateMotto = () => {
     if (!motto) return;
+    const mottoWords = [...motto.querySelectorAll(".w")];
     if (reduce) { mottoWords.forEach((w) => w.classList.add("lit")); motto.classList.add("done"); return; }
     const r = motto.getBoundingClientRect(), vh = window.innerHeight;
     const p = clamp((vh * 0.88 - r.top) / (vh * 0.5));
@@ -632,12 +671,12 @@
   const copyBtn = document.getElementById("copy-email");
   copyBtn.addEventListener("click", () => {
     const email = copyBtn.dataset.email;
-    const done = () => { copyBtn.textContent = "Kopiert"; setTimeout(() => (copyBtn.textContent = "E-Mail kopieren"), 1800); };
+    const done = () => { copyBtn.textContent = T().copied; setTimeout(() => (copyBtn.innerHTML = tr("copy")), 1800); };
     const fallback = () => {
       const link = document.querySelector(".contact .email");
       const range = document.createRange(); range.selectNodeContents(link);
       const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-      copyBtn.textContent = "Markiert, bitte kopieren";
+      copyBtn.textContent = T().selected;
     };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(email).then(done, fallback);
     else fallback();
@@ -645,6 +684,19 @@
 
   /* ---------- Wiring ---------- */
   const onScroll = () => { updateHero(); updateJourney(); updateHeader(); updateMotto(); };
+
+  const setLang = (next) => {
+    if (next === lang) return;
+    lang = next;
+    try { localStorage.setItem("lang", lang); } catch (e) {}
+    applyLang();
+    renderTicks();
+    if (gReady) { buildArtifacts(); fitHeadlines(); }
+    sizeJourney();
+    onScroll();
+    if (gReady) drawGraph(performance.now());
+  };
+  document.querySelectorAll(".lang-opt").forEach((b) => b.addEventListener("click", () => setLang(b.dataset.lang)));
   if (lenis) lenis.on("scroll", onScroll);
   window.addEventListener("scroll", onScroll, { passive: true });
   let rt;

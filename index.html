@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hendrik Generotzky</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Hendrik Generotzky, Wirtschaftsingenieur an der RWTH Aachen. Wissensmanagement mit KI und Erfahrung aus Lager und Produktion.">
+<meta name="description" content="Hendrik Generotzky, industrial engineer at RWTH Aachen University. AI-driven knowledge management with hands-on shop floor experience.">
 <meta property="og:title" content="Hendrik Generotzky">
-<meta property="og:description" content="Wissensmanagement mit KI und Erfahrung aus Lager und Produktion.">
+<meta property="og:description" content="AI-driven knowledge management with hands-on shop floor experience.">
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230D1B2A'/%3E%3Ctext x='32' y='44' font-family='Arial Narrow,Arial,sans-serif' font-weight='700' font-size='30' fill='%23ECEEF1' text-anchor='middle'%3EHG%3C/text%3E%3Crect x='10' y='52' width='14' height='4' fill='%23F26B1D'/%3E%3C/svg%3E">
 <link rel="preload" href="assets/fonts/archivo-var.woff2" as="font" type="font/woff2" crossorigin>
@@ -17,23 +17,28 @@
 <canvas class="topo" aria-hidden="true"></canvas>
 
 <header class="chrome">
-  <a class="brand" href="#top" aria-label="Zum Seitenanfang">Hendrik<br>Generotzky</a>
-  <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu">Menü</button>
-  <nav aria-label="Hauptnavigation">
-    <a href="#werdegang">Werdegang</a>
-    <a href="#expertise">Expertise</a>
-    <a href="#arbeitsweise">Arbeitsweise</a>
-    <a href="#kontakt">Kontakt</a>
+  <a class="brand" href="#top" aria-label="Back to top" data-i18n-attr="aria-label:aria.top">Hendrik<br>Generotzky</a>
+  <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" data-i18n="menu.open">Menu</button>
+  <nav aria-label="Main navigation" data-i18n-attr="aria-label:aria.nav">
+    <a href="#werdegang" data-i18n="nav.career">Career</a>
+    <a href="#expertise" data-i18n="nav.expertise">Expertise</a>
+    <a href="#arbeitsweise" data-i18n="nav.approach">Approach</a>
+    <a href="#kontakt" data-i18n="nav.contact">Contact</a>
   </nav>
+  <div class="lang" role="group" aria-label="Language">
+    <span class="lang-thumb" aria-hidden="true"></span>
+    <button type="button" class="lang-opt" data-lang="en" aria-pressed="true" lang="en">EN</button>
+    <button type="button" class="lang-opt" data-lang="de" aria-pressed="false" lang="de">DE</button>
+  </div>
 </header>
 
 <div class="menu" id="menu" hidden>
-  <button class="menu-close" type="button">Schließen</button>
+  <button class="menu-close" type="button" data-i18n="menu.close">Close</button>
   <nav aria-label="Navigation">
-    <a href="#werdegang">Werdegang</a>
-    <a href="#expertise">Expertise</a>
-    <a href="#arbeitsweise">Arbeitsweise</a>
-    <a href="#kontakt">Kontakt</a>
+    <a href="#werdegang" data-i18n="nav.career">Career</a>
+    <a href="#expertise" data-i18n="nav.expertise">Expertise</a>
+    <a href="#arbeitsweise" data-i18n="nav.approach">Approach</a>
+    <a href="#kontakt" data-i18n="nav.contact">Contact</a>
   </nav>
 </div>
 
@@ -41,33 +46,33 @@
 
   <!-- Hero: pinned scene. Scrolling sweeps a knowledge-graph layer across the portrait,
        then artefacts from the shop floor are added one by one and the graph grows. -->
-  <section class="hero-scene" aria-label="Einleitung">
+  <section class="hero-scene" aria-label="Introduction" data-i18n-attr="aria-label:aria.intro">
     <div class="hero">
       <div class="hero-base">
-        <img class="portrait" src="assets/hendrik.webp" alt="Porträt von Hendrik Generotzky" width="1000" height="1124" fetchpriority="high">
-        <h1 class="hl hl-left"><span>Vom</span><span>Shop</span><span>Floor.</span></h1>
-        <p class="hl hl-right" aria-hidden="true"><span>Zum</span><span>Knowledge</span><span>Graph.</span></p>
+        <img class="portrait" src="assets/hendrik.webp" alt="Portrait of Hendrik Generotzky" data-i18n-attr="alt:aria.portrait" width="1000" height="1124" fetchpriority="high">
+        <h1 class="hl hl-left" data-i18n="hero.left"><span>From</span><span>Shop</span><span>Floor.</span></h1>
+        <p class="hl hl-right" aria-hidden="true" data-i18n="hero.right"><span>To</span><span>Knowledge</span><span>Graph.</span></p>
       </div>
 
       <div class="hero-ai" aria-hidden="true">
         <img class="portrait portrait-ghost" src="assets/hendrik.webp" alt="" width="1000" height="1124">
         <canvas class="graph"></canvas>
         <div class="artifacts"></div>
-        <p class="hl hl-left"><span>Vom</span><span>Shop</span><span>Floor.</span></p>
-        <p class="hl hl-right"><span>Zum</span><span>Knowledge</span><span>Graph.</span></p>
+        <p class="hl hl-left" data-i18n="hero.left"><span>From</span><span>Shop</span><span>Floor.</span></p>
+        <p class="hl hl-right" data-i18n="hero.right"><span>To</span><span>Knowledge</span><span>Graph.</span></p>
         <ol class="feed"></ol>
       </div>
 
       <div class="lens" aria-hidden="true"></div>
-      <div class="wipe" aria-hidden="true"><span>KI-Layer</span></div>
+      <div class="wipe" aria-hidden="true"><span data-i18n="hero.wipe">AI layer</span></div>
 
-      <p class="hud hud-tl">Wirtschaftsingenieur, RWTH Aachen</p>
+      <p class="hud hud-tl" data-i18n="hero.role">Industrial Engineering, RWTH Aachen University</p>
       <div class="hud hud-br" aria-hidden="true">
-        <span>Knoten <b class="node-count">0</b></span>
-        <span>Kanten <b class="edge-count">0</b></span>
+        <span><i class="lbl" data-i18n="hero.nodes">Nodes</i> <b class="node-count">0</b></span>
+        <span><i class="lbl" data-i18n="hero.edges">Edges</i> <b class="edge-count">0</b></span>
       </div>
-      <p class="hud hud-hint" aria-hidden="true"><span class="hint-mouse">Mit der Maus über das Porträt fahren</span><span class="hint-touch">Porträt antippen und halten</span></p>
-      <p class="hud hud-scroll" aria-hidden="true">Scrollen</p>
+      <p class="hud hud-hint" aria-hidden="true"><span class="hint-mouse" data-i18n="hero.hintMouse">Move your cursor over the portrait</span><span class="hint-touch" data-i18n="hero.hintTouch">Tap and hold the portrait</span></p>
+      <p class="hud hud-scroll" aria-hidden="true" data-i18n="hero.scroll">Scroll</p>
     </div>
   </section>
 
@@ -75,110 +80,110 @@
   <section class="intro gutter">
     <figure class="motto">
       <blockquote>
-        <p><span class="q-open" aria-hidden="true">„</span><span class="w">Operations</span> <span class="w">verstehen.</span><br><span class="w">Wissen</span> <span class="w lab">skalieren.</span><span class="q-close" aria-hidden="true">“</span></p>
+        <p data-i18n="motto"><span class="q-open" aria-hidden="true">“</span><span class="w">Understand</span> <span class="w">operations.</span><br><span class="w">Scale</span> <span class="w lab">knowledge.</span><span class="q-close" aria-hidden="true">”</span></p>
       </blockquote>
     </figure>
-    <p class="statement rise">Mein Weg führt vom Shop Floor eines produzierenden Industrieunternehmens in die angewandte Forschung am WZL der RWTH Aachen. In mehr als fünf Jahren Consulting und Forschung habe ich Lean-Initiativen und über 20 internationale Benchmarking-Projekte mitbetreut und dabei Mitarbeitende in Workshops angeleitet. Heute liegt mein Fokus auf AI-gestütztem Wissensmanagement mit Knowledge Graphs und Large Language Models. Im Mittelpunkt steht für mich dabei die erfolgreiche Projektumsetzung mit einem nachhaltigen Erfolg, der über den Projektabschluss hinaus Bestand hat.</p>
+    <p class="statement rise" data-i18n="intro">My path leads from the shop floor of a manufacturing company to applied research at the WZL of RWTH Aachen University. Over more than five years in consulting and research, I have co-supervised lean initiatives and more than 20 international benchmarking projects, guiding employees in workshops along the way. Today my focus is AI-driven knowledge management with knowledge graphs and large language models. At the core of my work is successful project delivery with sustainable impact that lasts beyond project completion.</p>
     <ul class="facts">
-      <li><span class="fig"><span data-count="5">5</span><em>+</em></span><p>Jahre Forschung und KMU-Beratung am Werkzeugmaschinenlabor WZL</p></li>
-      <li><span class="fig"><span data-count="20">20</span><em>+</em></span><p>Benchmarking-Projekte mit Werkzeugbaubetrieben in Europa und Südafrika</p></li>
-      <li><span class="fig"><span data-count="4">4</span></span><p>Produktionslinien, an denen ich 5S eingeführt habe</p></li>
-      <li><span class="fig"><span data-count="2">2</span></span><p>wissenschaftliche Veröffentlichungen</p></li>
+      <li><span class="fig"><span data-count="5">5</span><em>+</em></span><p data-i18n="fact.1">years of research and SME consulting at the Laboratory for Machine Tools WZL</p></li>
+      <li><span class="fig"><span data-count="20">20</span><em>+</em></span><p data-i18n="fact.2">benchmarking projects with tool and die makers in Europe and South Africa</p></li>
+      <li><span class="fig"><span data-count="4">4</span></span><p data-i18n="fact.3">production lines where I introduced 5S</p></li>
+      <li><span class="fig"><span data-count="2">2</span></span><p data-i18n="fact.4">scientific publications</p></li>
     </ul>
   </section>
 
   <!-- Career: pinned horizontal timeline on desktop, vertical list on phones -->
-  <section class="journey" id="werdegang" aria-label="Werdegang">
+  <section class="journey" id="werdegang" aria-label="Career" data-i18n-attr="aria-label:nav.career">
     <div class="journey-pin">
       <div class="journey-head gutter">
-        <h2 class="display rise">Werdegang</h2>
-        <p class="journey-note">Von der Materialwirtschaft in die Forschung, seit 2014</p>
+        <h2 class="display rise" data-i18n="nav.career">Career</h2>
+        <p class="journey-note" data-i18n="career.note">From materials management to research, since 2014</p>
       </div>
 
       <ol class="track gutter">
-        <li class="card" data-year="2014" data-short="Ausbildung">
+        <li class="card" data-year="2014" data-short="Apprenticeship" data-short-de="Ausbildung">
           <p class="where">Jung Pumpen, Steinhagen</p>
           <svg class="motif" viewBox="0 0 160 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M8 10v44M16 10v44M22 10v44M34 10v44M40 10v44M52 10v44M58 10v44M64 10v44"/><path class="sig" d="M104 22a16 16 0 0 1 0 20M114 14a26 26 0 0 1 0 36M124 6a36 36 0 0 1 0 52"/></g></svg>
           <p class="year">2014</p>
-          <h3>Ausbildung zum Industriekaufmann (IHK)</h3>
-          <p>Ich habe alle kaufmännischen Abteilungen durchlaufen und bin in der Materialwirtschaft hängen geblieben. Im Abschlussprojekt haben wir mit der Würth AG eine RFID-Bestellung für die 50 Teile mit dem höchsten Umschlag eingeführt, ausgewählt per ABC-Analyse.</p>
+          <h3 data-i18n="c1.h">Apprenticeship as Industrial Clerk (IHK)</h3>
+          <p data-i18n="c1.p">I rotated through all commercial departments and found my focus in materials management. In my final project, we introduced RFID-based ordering with Würth AG for the 50 highest-turnover parts, selected via ABC analysis.</p>
         </li>
 
         <li class="card" data-year="2016" data-short="London">
           <p class="where">Biotech &amp; Money Ltd., London</p>
           <svg class="motif" viewBox="0 0 160 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="32" cy="32" r="26"/><ellipse cx="32" cy="32" rx="11" ry="26"/><path d="M6 32h52M10 18h44M10 46h44"/><path class="sig" d="M76 32h70M138 24l8 8-8 8"/></g></svg>
           <p class="year">2016</p>
-          <h3>Praktikum im Marketing</h3>
-          <p>Messeauftritte in London betreut und Fachartikel geschrieben.</p>
+          <h3 data-i18n="c2.h">Marketing internship</h3>
+          <p data-i18n="c2.p">Supported trade fair appearances in London and wrote trade articles.</p>
         </li>
 
-        <li class="card card-key" data-year="2017" data-short="Shop Floor">
+        <li class="card card-key" data-year="2017" data-short="Shop Floor" data-short-de="Shop Floor">
           <p class="where">Jung Pumpen, Steinhagen</p>
           <svg class="motif" viewBox="0 0 160 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="8" width="22" height="22"/><rect x="34" y="8" width="22" height="22"/><rect x="6" y="36" width="22" height="22"/><rect x="34" y="36" width="22" height="22"/><path class="sig" d="M74 52h20V14h26v38h30"/><circle class="sig" cx="150" cy="52" r="4"/></g></svg>
           <p class="year">2017</p>
           <h3>Inventory Control Coordinator</h3>
-          <p>Kaizen-Workshops mit sieben Lagermitarbeitenden geleitet, 5S an vier Linien eingeführt und einen Milkrun für die Just-in-Time-Versorgung aufgebaut. Danach standen die Linien seltener still, weil Material fehlte. Außerdem habe ich Arbeitsplätze per PFEP neu geplant und das Hochregallager in SAP umgebaut.</p>
+          <p data-i18n="c3.p">Led Kaizen workshops with seven warehouse employees, introduced 5S on four lines and set up a milk run for just-in-time supply. Afterwards, lines stopped less often because of missing material. I also redesigned workstations using PFEP and restructured the high-bay warehouse in SAP.</p>
         </li>
 
         <li class="card" data-year="2017" data-short="B.Sc.">
           <p class="where">RWTH Aachen</p>
           <svg class="motif" viewBox="0 0 160 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="32" cy="32" r="14"/><path d="M32 6v8M32 50v8M6 32h8M50 32h8M13.6 13.6l5.7 5.7M44.7 44.7l5.7 5.7M13.6 50.4l5.7-5.7M44.7 19.3l5.7-5.7"/><path class="sig" d="M78 50l20-20 14 10 34-28"/></g></svg>
           <p class="year">2017</p>
-          <h3>Bachelor Wirtschaftsingenieurwesen, Maschinenbau</h3>
-          <p>Vertiefung Produktionstechnik. Seit 2021 studiere ich parallel zur Arbeit am WZL. In der Bachelorarbeit habe ich eine Testmethode für datengetriebene Geschäftsmodelle im Werkzeugbau entwickelt (1,3).</p>
+          <h3 data-i18n="c4.h">Bachelor in Industrial Engineering, Mechanical Engineering</h3>
+          <p data-i18n="c4.p">Specialisation in production engineering. Since 2021 I have studied alongside my work at WZL. In my bachelor thesis I developed a testing method for data-driven business models in tool making.</p>
         </li>
 
         <li class="card" data-year="2021" data-short="Benchmarking">
-          <p class="where">WZL der RWTH Aachen</p>
+          <p class="where" data-i18n="c5.where">WZL of RWTH Aachen University</p>
           <svg class="motif" viewBox="0 0 160 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M8 58h56"/><rect x="10" y="34" width="8" height="24"/><rect x="24" y="22" width="8" height="36"/><rect x="38" y="40" width="8" height="18"/><rect class="sig" x="52" y="10" width="8" height="48"/><path d="M80 44h66" stroke-dasharray="4 4"/><path class="sig" d="M80 24h40"/></g></svg>
           <p class="year">2021</p>
-          <h3>Benchmarking im Werkzeugbau</h3>
-          <p>Über 20 Projekte mit Werkzeugbaubetrieben in Europa und Südafrika. Wir vergleichen Prozesskennzahlen und zeigen, wo ein Betrieb ansetzen sollte. Für Kunden habe ich außerdem Layouts für die Linienversorgung entworfen.</p>
+          <h3 data-i18n="c5.h">Benchmarking in tool making</h3>
+          <p data-i18n="c5.p">More than 20 projects with tool and die makers in Europe and South Africa. We compare process KPIs and show where a company should start. I also designed line supply layouts for clients.</p>
         </li>
 
         <li class="card" data-year="2025" data-short="ARLearn">
-          <p class="where">Forschungsprojekt am WZL</p>
+          <p class="where" data-i18n="c6.where">Research project at WZL</p>
           <svg class="motif" viewBox="0 0 160 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18V6h12M46 6h12v12M58 46v12H46M18 58H6V46"/><path class="sig" d="M32 18l12 7v14l-12 7-12-7V25zM20 25l12 7 12-7M32 32v14"/><path d="M80 32h22M110 32h14M132 32h14"/></g></svg>
           <p class="year">2025</p>
           <h3>ARLearn</h3>
-          <p>Eine AR-Umgebung, mit der Beschäftigte in der Produktion Wissen weitergeben sollten. In den Feldtests kam die Hardware an ihre Grenzen, und im Betrieb war die Akzeptanz gering.</p>
+          <p data-i18n="c6.p">An AR environment intended to help production staff pass on their knowledge. In field tests the hardware reached its limits, and acceptance on the shop floor was low.</p>
         </li>
 
         <li class="card" data-year="2025" data-short="M.Sc.">
-          <p class="where">RWTH Aachen und Bangkok</p>
+          <p class="where" data-i18n="c7.where">RWTH Aachen and Bangkok</p>
           <svg class="motif" viewBox="0 0 160 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="16" cy="32" r="8"/><circle cx="48" cy="14" r="8"/><circle cx="48" cy="50" r="8"/><path d="M23 28l18-10M23 36l18 10"/><path class="sig" d="M80 32c20-24 46-24 66 0M80 32c20 24 46 24 66 0"/></g></svg>
           <p class="year">2025</p>
-          <h3>Master Wirtschaftsingenieurwesen, Maschinenbau</h3>
-          <p>Vertiefung Innovation, Entrepreneurship und Marketing, derzeit mit 1,8. Im Kurs Global Innovation Processes habe ich ein Team mit Studierenden aus Los Angeles, Mexiko-Stadt und Shanghai geleitet (1,0). Für das Projektmodul war ich eine Woche an der Chulalongkorn University in Bangkok.</p>
+          <h3 data-i18n="c7.h">Master in Industrial Engineering, Mechanical Engineering</h3>
+          <p data-i18n="c7.p">Specialisation in innovation, entrepreneurship and marketing. Modules include production management and organisational development as well as design for manufacturing. In Global Innovation Processes I coordinated an international team with students from Los Angeles, Mexico City and Shanghai, and for the International Entrepreneurship project module I spent a week at Chulalongkorn University in Bangkok.</p>
         </li>
 
-        <li class="card" data-year="2026" data-short="Re-Fabrikation">
-          <p class="where">Projekt SustainTool, WZL</p>
+        <li class="card" data-year="2026" data-short="Remanufacturing" data-short-de="Re-Fabrikation">
+          <p class="where" data-i18n="c8.where">SustainTool project, WZL</p>
           <svg class="motif" viewBox="0 0 160 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M54 32a22 22 0 1 1-6.4-15.6"/><path d="M48 6v11H37"/><path class="sig" d="M80 50h18V36h18V22h18V10h12"/></g></svg>
           <p class="year">2026</p>
-          <h3>Re-Fabrikation von Werkzeugkomponenten</h3>
-          <p>Ich entwickle ein MVP, das gebrauchte Werkzeugkomponenten auf ihre Eignung für die Re-Fabrikation bewertet. Grundlage ist SustainTool, ein Projekt, das für die Branche rund 105 Mio. € und 212 kt CO2e Potenzial ermittelt hat. Die Methode ist im Journal of Physics erschienen.</p>
+          <h3 data-i18n="c8.h">Remanufacturing of tool components</h3>
+          <p data-i18n="c8.p">I am developing an MVP that assesses used tool components for remanufacturing. It builds on SustainTool, a project that identified an industry potential of around €105 million and 212 kt CO2e. The method has been published in the Journal of Physics.</p>
         </li>
 
-        <li class="card card-key" data-year="Heute" data-short="Knowledge Graph">
-          <p class="where">WZL der RWTH Aachen</p>
+        <li class="card card-key" data-year="Today" data-short="Knowledge Graph" data-short-de="Knowledge Graph">
+          <p class="where" data-i18n="c5.where">WZL of RWTH Aachen University</p>
           <svg class="motif" viewBox="0 0 160 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="40" r="5"/><circle cx="36" cy="14" r="5"/><circle cx="40" cy="50" r="5"/><circle cx="62" cy="30" r="5"/><path d="M16 37l16-20M17 41l18 8M40 18l18 9M44 47l14-13"/><path class="sig" d="M84 16h62v26h-40l-12 12V42H84z"/></g></svg>
-          <p class="year">Heute</p>
-          <h3>„Talk to your Graph“</h3>
-          <p>Produktionsontologien werden per Python automatisch in Knowledge Graphs überführt. Darauf setzt eine LLM-Abfrage auf, sodass man den Graphen in normaler Sprache befragen kann. Nebenbei arbeite ich neue Hilfskräfte ein.</p>
+          <p class="year" data-i18n="c9.year">Today</p>
+          <h3 data-i18n="c9.h">“Talk to your Graph”</h3>
+          <p data-i18n="c9.p">Production ontologies are converted into knowledge graphs automatically with Python. An LLM-based query layer on top lets people ask the graph questions in plain language. I also onboard new student assistants.</p>
         </li>
 
-        <li class="card" data-year="2027" data-short="Abschluss">
-          <p class="where">Voraussichtlich im April</p>
+        <li class="card" data-year="2027" data-short="Graduation" data-short-de="Abschluss">
+          <p class="where" data-i18n="c10.where">Expected in April</p>
           <svg class="motif" viewBox="0 0 160 64" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2"><path d="M10 58V6"/><path class="sig" d="M10 8h40l-8 10 8 10H10"/><path d="M80 32h50" stroke-dasharray="4 4"/></g></svg>
           <p class="year">2027</p>
-          <h3>Masterabschluss</h3>
-          <p>Danach suche ich eine Stelle in Operations oder Beratung, in der ich Produktionswissen mit KI nutzbar machen kann.</p>
+          <h3 data-i18n="c10.h">Master’s degree</h3>
+          <p data-i18n="c10.p">Afterwards I am looking for a role in operations or consulting where I can make production knowledge usable with AI.</p>
         </li>
       </ol>
 
       <div class="progress gutter" aria-hidden="true">
-        <div class="phases"><span>Praxis</span><span class="phase-ai">Forschung und KI</span></div>
+        <div class="phases"><span data-i18n="phase.practice">Practice</span><span class="phase-ai" data-i18n="phase.ai">Research and AI</span></div>
         <div class="bar"><i></i></div>
         <ol class="ticks"></ol>
       </div>
@@ -187,48 +192,48 @@
 
   <!-- Expertise -->
   <section class="expertise gutter" id="expertise" aria-labelledby="expertise-h">
-    <h2 class="display rise" id="expertise-h">Expertise</h2>
+    <h2 class="display rise" id="expertise-h" data-i18n="nav.expertise">Expertise</h2>
     <ul class="rows">
       <li class="row">
-        <h3>Wissensmanagement mit KI</h3>
-        <p>Ontologien in Knowledge Graphs überführen und per Sprachmodell abfragbar machen. Für Recherche und wiederkehrende Abläufe setze ich generative KI und agentische Workflows ein.</p>
+        <h3 data-i18n="x1.h">AI-driven knowledge management</h3>
+        <p data-i18n="x1.p">Turning ontologies into knowledge graphs and making them queryable through language models. For research and recurring tasks I use generative AI and agentic workflows.</p>
       </li>
       <li class="row">
         <h3>Lean Management</h3>
-        <p>Ich moderiere Kaizen-Workshops, gehe mit dem Team an die Linie und kümmere mich darum, dass 5S nach dem Workshop nicht wieder einschläft.</p>
+        <p data-i18n="x2.p">I facilitate Kaizen workshops, go to the line with the team and make sure 5S does not fade once the workshop is over.</p>
       </li>
       <li class="row">
-        <h3>Intralogistik</h3>
-        <p>Routenzug, Plan for Every Part und Layoutplanung für die Linienversorgung.</p>
+        <h3 data-i18n="x3.h">Intralogistics</h3>
+        <p data-i18n="x3.p">Milk run, Plan for Every Part and layout planning for line supply.</p>
       </li>
       <li class="row">
-        <h3>Operatives Benchmarking</h3>
-        <p>Kennzahlen erheben, mit vergleichbaren Betrieben abgleichen und Maßnahmen ableiten, die zum jeweiligen Betrieb passen.</p>
+        <h3 data-i18n="x4.h">Operational benchmarking</h3>
+        <p data-i18n="x4.p">Collecting KPIs, comparing them with similar companies and deriving measures that fit the specific business.</p>
       </li>
       <li class="row">
-        <h3>Re-Fabrikation</h3>
-        <p>Gebrauchte Werkzeugkomponenten bewerten, damit sie ein zweites Mal eingesetzt werden können.</p>
+        <h3 data-i18n="x5.h">Remanufacturing</h3>
+        <p data-i18n="x5.p">Assessing used tool components so they can be put to use a second time.</p>
       </li>
       <li class="row">
-        <h3>SAP und Materialwirtschaft</h3>
-        <p>Drei Jahre täglich mit SAP ERP gearbeitet, vor allem in Beschaffung und Lagerverwaltung.</p>
+        <h3 data-i18n="x6.h">SAP and materials management</h3>
+        <p data-i18n="x6.p">Three years of daily work with SAP ERP, mainly in procurement and warehouse management.</p>
       </li>
     </ul>
-    <p class="langs">Sprachen: Deutsch als Muttersprache, Englisch verhandlungssicher (C1), Spanisch gut (B1).</p>
+    <p class="langs" data-i18n="langs">Languages: German (native), English (business fluent, C1), Spanish (good, B1).</p>
   </section>
 
   <!-- Way of working, as prose -->
   <section class="method gutter" id="arbeitsweise" aria-labelledby="method-h">
-    <h2 class="display rise" id="method-h">Arbeitsweise</h2>
+    <h2 class="display rise" id="method-h" data-i18n="nav.approach">Approach</h2>
     <div class="method-text">
-      <p><strong class="lead">Hands-on im Prozess.</strong>Jedes Projekt beginnt für mich vor Ort. Ich nehme Abläufe direkt im Prozess auf und spreche mit den Mitarbeitenden an der Linie, um Engpässe und Verschwendung aus erster Hand zu verstehen. Diese Nähe zur Praxis habe ich auf dem Shop Floor gelernt und in Benchmarking-Projekten im Werkzeugbau weiter geschärft.</p>
-      <p><strong class="lead">Präzise in der Analyse.</strong>Im Anschluss strukturiere ich die Erkenntnisse und werte sie datenbasiert aus, etwa anhand von Prozesskennzahlen und Branchenvergleichen. Daraus leite ich Maßnahmen ab, die zum jeweiligen Betrieb passen und von den Menschen vor Ort mitgetragen werden. Diese Kombination aus Praxisnähe und analytischer Tiefe ist für mich die Grundlage für nachhaltigen Erfolg in der Umsetzung.</p>
+      <p data-i18n="m1"><strong class="lead">Hands-on in the process.</strong>Every project starts on site for me. I capture workflows directly in the process and talk to the people on the line to understand bottlenecks and waste first-hand. I learned this closeness to practice on the shop floor and sharpened it in benchmarking projects in tool making.</p>
+      <p data-i18n="m2"><strong class="lead">Precise in the analysis.</strong>I then structure the findings and analyse them based on data, for example with process KPIs and industry comparisons. From this I derive measures that fit the specific company and are backed by the people on site. This combination of practical proximity and analytical depth is, for me, the foundation for sustainable success in implementation.</p>
     </div>
   </section>
 
   <!-- Publications -->
   <section class="pubs gutter" aria-labelledby="pubs-h">
-    <h2 class="label" id="pubs-h">Veröffentlichungen</h2>
+    <h2 class="label" id="pubs-h" data-i18n="pubs">Publications</h2>
     <ul class="pub-list">
       <li>
         <span class="pub-date">10/2026</span>
@@ -243,8 +248,8 @@
     </ul>
   </section>
 
-  <section class="marquee" aria-label="Stationen und Projektpartner">
-    <p class="label gutter">Stationen und Projektpartner</p>
+  <section class="marquee" aria-label="Career stations and project partners" data-i18n-attr="aria-label:stations">
+    <p class="label gutter" data-i18n="stations">Career stations and project partners</p>
     <div class="marquee-window">
       <div class="marquee-track">
         <span>RWTH Aachen University</span><span>Werkzeugmaschinenlabor WZL</span><span>Werkzeugbau Akademie</span><span>Jung Pumpen</span><span>Würth AG</span><span>Chulalongkorn University</span>
@@ -255,13 +260,13 @@
 
   <!-- Contact -->
   <section class="contact gutter" id="kontakt" aria-labelledby="contact-h">
-    <h2 class="display" id="contact-h">Kontakt</h2>
-    <p class="contact-text">Am schnellsten erreichen Sie mich per E-Mail oder über LinkedIn. Meinen vollständigen Lebenslauf schicke ich Ihnen gern zu.</p>
+    <h2 class="display" id="contact-h" data-i18n="nav.contact">Contact</h2>
+    <p class="contact-text" data-i18n="contact.text">The quickest way to reach me is by email or LinkedIn. I am happy to send you my full CV.</p>
     <div class="contact-grid">
       <div class="contact-item">
-        <span class="label">E-Mail</span>
+        <span class="label" data-i18n="contact.email">Email</span>
         <a class="email" href="mailto:Hendrik.Generotzky@rwth-aachen.de">Hendrik.Generotzky@rwth-aachen.de</a>
-        <button type="button" class="copy" id="copy-email" data-email="Hendrik.Generotzky@rwth-aachen.de">E-Mail kopieren</button>
+        <button type="button" class="copy" id="copy-email" data-email="Hendrik.Generotzky@rwth-aachen.de" data-i18n="copy">Copy email</button>
       </div>
       <div class="contact-item">
         <span class="label">LinkedIn</span>
@@ -276,6 +281,7 @@
 </footer>
 
 <script src="assets/vendor/lenis.min.js"></script>
+<script src="i18n.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
