@@ -23,10 +23,23 @@
       const target = id === "#top" ? document.body : document.querySelector(id);
       if (!target) return;
       e.preventDefault();
-      if (lenis) lenis.scrollTo(target, { offset: 0 });
-      else target.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
+      const off = id === "#top" ? 0 : -(document.querySelector(".chrome").offsetHeight - 1);
+      if (lenis) lenis.scrollTo(target, { offset: off });
+      else window.scrollTo({ top: id === "#top" ? 0 : target.getBoundingClientRect().top + window.scrollY + off, behavior: reduce ? "auto" : "smooth" });
     });
   });
+
+  /* ---------- Header: fixed bar, dark over dark sections ---------- */
+  const header = document.querySelector(".chrome");
+  const darkZones = [document.querySelector(".journey"), document.querySelector(".foot")];
+  const setHeaderH = () => document.documentElement.style.setProperty("--header-h", header.offsetHeight + "px");
+  setHeaderH();
+  const updateHeader = () => {
+    const y = header.offsetHeight * 0.5;
+    const dark = darkZones.some((z) => { const r = z.getBoundingClientRect(); return r.top <= y && r.bottom > y; });
+    header.classList.toggle("on-dark", dark);
+    document.body.classList.toggle("header-dark", dark);
+  };
 
   /* ---------- Mobile menu ---------- */
   const menu = document.getElementById("menu");
@@ -293,7 +306,8 @@
     const gutL = parseFloat(getComputedStyle(L).left) || 20;
     const gutR = parseFloat(getComputedStyle(Rh).right) || 20;
     const tl = hero.querySelector(".hud-tl");
-    const minTop = tl && tl.offsetParent ? tl.offsetTop + tl.offsetHeight + 18 : (H < 500 ? 58 : 84);
+    const hdrH = document.querySelector(".chrome").offsetHeight;
+    const minTop = Math.max(hdrH + 16, tl && tl.offsetParent ? tl.offsetTop + tl.offsetHeight + 18 : 0);
     const maxBottom = H - (stacked ? 110 : H < 500 ? 70 : 170); // keep clear of counters, feed and hints
     const preferTop = stacked ? minTop : H * 0.26;
     const fitsLeft = (t, w, h) => { const s2 = sil(t, t + h); return gutL + w <= (s2 ? s2.left - gap : W - gutR); };
@@ -620,7 +634,7 @@
   });
 
   /* ---------- Wiring ---------- */
-  const onScroll = () => { updateHero(); updateJourney(); };
+  const onScroll = () => { updateHero(); updateJourney(); updateHeader(); };
   if (lenis) lenis.on("scroll", onScroll);
   window.addEventListener("scroll", onScroll, { passive: true });
   let rt;
@@ -631,12 +645,12 @@
     if (w === lastW && Math.abs(h - lastH) < 160) return;
     lastW = w; lastH = h;
     clearTimeout(rt);
-    rt = setTimeout(() => { sizeTopo(); drawTopo(performance.now()); buildGraph(); sizeJourney(); onScroll(); }, 120);
+    rt = setTimeout(() => { setHeaderH(); sizeTopo(); drawTopo(performance.now()); buildGraph(); sizeJourney(); onScroll(); }, 120);
   });
   window.addEventListener("orientationchange", () => { lastW = -1; });
 
   sizeJourney();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { sizeJourney(); onScroll(); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { setHeaderH(); sizeJourney(); onScroll(); });
   window.addEventListener("load", () => { sizeJourney(); onScroll(); });
   onScroll();
 })();
