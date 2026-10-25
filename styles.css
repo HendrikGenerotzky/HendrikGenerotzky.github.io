@@ -345,8 +345,8 @@ body { -webkit-tap-highlight-color: transparent; }
 
 /* Phones held upright: headlines stacked above the portrait */
 @media (max-width: 860px) and (orientation: portrait) {
-  .portrait { height: min(50%, 560px); }
-  .hl { font-size: var(--hl-fs, clamp(48px, 17vw, 96px)); }
+  .portrait { height: min(64%, 640px); }
+  .hl { font-size: var(--hl-fs, clamp(32px, 12vw, 80px)); }
   .hero { --hl-top: 11%; }
   .hud-scroll { bottom: 20px; }
   .hud-br { bottom: 20px; background: rgba(10, 21, 34, .86); padding: 6px 8px; }

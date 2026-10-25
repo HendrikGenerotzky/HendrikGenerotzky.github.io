@@ -217,7 +217,7 @@
     const R = Math.min(W, H) * (small ? 0.16 : 0.11);
     clusters = ARTIFACTS.map((a, k) => {
       const cr = rng(101 + k * 17);
-      const cx = a.at[0] * W, cy = (stackedMode() ? 0.46 + a.at[1] * 0.48 : a.at[1]) * H;
+      const cx = a.at[0] * W, cy = (stackedMode() ? 0.30 + a.at[1] * 0.62 : a.at[1]) * H;
       const n = Math.round(a.n * scale);
       const pts = [];
       for (let i = 0; i < n; i++) {
@@ -273,7 +273,7 @@
 
   /* Size both three-line headlines as large as possible without touching the portrait,
      the counters, the feed or each other. Searches font size and vertical position together.
-     Desktop: both blocks share one top, left and right of the portrait. Phones: stacked above it. */
+     Both blocks share one top; each stays inside its own half of the screen. */
   const fitHeadlines = () => {
     if (!alpha || !pBox) return;
     const all = [...hero.querySelectorAll(".hl")];
@@ -310,20 +310,15 @@
     const minTop = Math.max(hdrH + 16, tl && tl.offsetParent ? tl.offsetTop + tl.offsetHeight + 18 : 0);
     const maxBottom = H - (stacked ? 110 : H < 500 ? 70 : 170); // keep clear of counters, feed and hints
     const preferTop = stacked ? minTop : H * 0.26;
-    const fitsLeft = (t, w, h) => { const s2 = sil(t, t + h); return gutL + w <= (s2 ? s2.left - gap : W - gutR); };
-    const fitsRight = (t, w, h) => { const s2 = sil(t, t + h); return W - gutR - w >= (s2 ? s2.right + gap : gutL); };
+    // each headline must stay entirely in its own half, so the KI layer splits them cleanly at 50 %
+    const mid = W / 2, midGap = Math.max(10, W * 0.025);
+    const fitsLeft = (t, w, h) => { const s2 = sil(t, t + h); return gutL + w <= Math.min(s2 ? s2.left - gap : W, mid - midGap); };
+    const fitsRight = (t, w, h) => { const s2 = sil(t, t + h); return W - gutR - w >= Math.max(s2 ? s2.right + gap : 0, mid + midGap); };
 
     let best = null;
     for (let fs = Math.floor(fsMax); fs >= 24 && !best; fs -= 1) {
       const k = fs / REF, wL = wL0 * k, wR = wR0 * k, hL = hL0 * k, hR = hR0 * k;
-      if (stacked) {
-        if (wL > W - gutL - gutR || wR > W - gutL - gutR) continue;
-        for (let t = minTop; ; t += 4) {
-          const rTop = t + hL + fs * 0.18;
-          if (rTop + hR > maxBottom) break;
-          if (fitsLeft(t, wL, hL) && fitsRight(rTop, wR, hR)) { best = { fs, t, rTop }; break; }
-        }
-      } else {
+      {
         if (wL + wR + gap * 2 > W - gutL - gutR) continue;
         let cand = null;
         for (let t = minTop; t + Math.max(hL, hR) <= maxBottom; t += 4) {
