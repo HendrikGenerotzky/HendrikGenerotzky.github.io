@@ -1,7 +1,7 @@
 /* Translations. English is the page's own text; German replaces it when selected. */
 window.I18N = {
   de: {
-    "privacy": "Hier gibt es keine Cookies. Ich zähle Besuche mit <a href=\"https://www.goatcounter.com\" target=\"_blank\" rel=\"noopener\">GoatCounter</a>, ohne persönliche Daten zu speichern, nur um zu wissen, ob jemand vorbeischaut.",
+    "privacy": "Hier gibt es keine Cookies. Besuche werden mit GoatCounter gezählt, ohne persönliche Daten zu speichern.",
   "nav.career": "Werdegang",
   "nav.expertise": "Expertise",
   "nav.approach": "Arbeitsweise",
