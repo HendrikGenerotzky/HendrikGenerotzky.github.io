@@ -3,6 +3,8 @@
 
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const narrow = () => window.matchMedia("(max-width: 860px)").matches;
+  const coarse = window.matchMedia("(pointer: coarse)").matches; // phones and tablets
+  const stackedMode = () => narrow() && window.innerHeight > window.innerWidth;
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const ease = (t) => 1 - Math.pow(1 - t, 3);
   const fmt = (n) => Math.round(n).toLocaleString("de-DE");
@@ -10,7 +12,7 @@
 
   /* ---------- Smooth scrolling ---------- */
   let lenis = null;
-  if (!reduce && typeof window.Lenis === "function") {
+  if (!reduce && !coarse && typeof window.Lenis === "function") {
     lenis = new window.Lenis({ lerp: 0.1, smoothWheel: true });
     const raf = (t) => { lenis.raf(t); requestAnimationFrame(raf); };
     requestAnimationFrame(raf);
@@ -25,6 +27,20 @@
       else target.scrollIntoView({ behavior: reduce ? "auto" : "smooth" });
     });
   });
+
+  /* ---------- Mobile menu ---------- */
+  const menu = document.getElementById("menu");
+  const menuBtn = document.querySelector(".menu-btn");
+  const setMenu = (open) => {
+    menu.hidden = !open;
+    menuBtn.setAttribute("aria-expanded", String(open));
+    document.body.classList.toggle("menu-open", open);
+    if (lenis) open ? lenis.stop() : lenis.start();
+  };
+  menuBtn.addEventListener("click", () => setMenu(true));
+  menu.querySelector(".menu-close").addEventListener("click", () => setMenu(false));
+  menu.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setMenu(false), { capture: true }));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !menu.hidden) setMenu(false); });
 
   /* ---------- Topographic background ---------- */
   const topo = document.querySelector(".topo");
@@ -45,7 +61,7 @@
 
   let tw = 0, th = 0, tdpr = 1;
   const sizeTopo = () => {
-    tdpr = Math.min(window.devicePixelRatio || 1, 2);
+    tdpr = coarse ? 1 : Math.min(window.devicePixelRatio || 1, 2);
     tw = window.innerWidth; th = window.innerHeight;
     topo.width = tw * tdpr; topo.height = th * tdpr;
   };
@@ -90,7 +106,7 @@
   if (!reduce) {
     let last = 0;
     const loop = (now) => {
-      if (!document.hidden && now - last > 90) { drawTopo(now); last = now; }
+      if (!document.hidden && now - last > (coarse ? 220 : 90)) { drawTopo(now); last = now; }
       requestAnimationFrame(loop);
     };
     requestAnimationFrame(loop);
@@ -150,7 +166,7 @@
     const hr = hero.getBoundingClientRect(), r = ghost.getBoundingClientRect();
     W = hr.width; H = hr.height;
     pBox = { x: r.left - hr.left, y: r.top - hr.top, w: r.width, h: r.height };
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, coarse ? 1.5 : 2);
     gcan.width = Math.round(W * dpr); gcan.height = Math.round(H * dpr);
     gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -188,7 +204,7 @@
     const R = Math.min(W, H) * (small ? 0.16 : 0.11);
     clusters = ARTIFACTS.map((a, k) => {
       const cr = rng(101 + k * 17);
-      const cx = a.at[0] * W, cy = (small ? 0.46 + a.at[1] * 0.48 : a.at[1]) * H;
+      const cx = a.at[0] * W, cy = (stackedMode() ? 0.46 + a.at[1] * 0.48 : a.at[1]) * H;
       const n = Math.round(a.n * scale);
       const pts = [];
       for (let i = 0; i < n; i++) {
@@ -250,7 +266,7 @@
     const all = [...hero.querySelectorAll(".hl")];
     const L = hero.querySelector(".hero-base .hl-left"), Rh = hero.querySelector(".hero-base .hl-right");
     const hr = hero.getBoundingClientRect();
-    const stacked = narrow();
+    const stacked = stackedMode();
     all.forEach((el) => (el.style.top = ""));
     hero.style.removeProperty("--hl-fs");
     const fsMax = parseFloat(getComputedStyle(L).fontSize);
@@ -277,8 +293,8 @@
     const gutL = parseFloat(getComputedStyle(L).left) || 20;
     const gutR = parseFloat(getComputedStyle(Rh).right) || 20;
     const tl = hero.querySelector(".hud-tl");
-    const minTop = tl && tl.offsetParent ? tl.offsetTop + tl.offsetHeight + 18 : 84;
-    const maxBottom = H - (stacked ? 110 : 170); // keep clear of counters, feed and hints
+    const minTop = tl && tl.offsetParent ? tl.offsetTop + tl.offsetHeight + 18 : (H < 500 ? 58 : 84);
+    const maxBottom = H - (stacked ? 110 : H < 500 ? 70 : 170); // keep clear of counters, feed and hints
     const preferTop = stacked ? minTop : H * 0.26;
     const fitsLeft = (t, w, h) => { const s2 = sil(t, t + h); return gutL + w <= (s2 ? s2.left - gap : W - gutR); };
     const fitsRight = (t, w, h) => { const s2 = sil(t, t + h); return W - gutR - w >= (s2 ? s2.right + gap : gutL); };
@@ -428,10 +444,22 @@
   const lensOff = () => { lens.on = false; lens.tr = 0; };
   hero.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") pointAt(e.clientX, e.clientY); });
   hero.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") lensOff(); });
-  hero.addEventListener("touchstart", (e) => { const t = e.touches[0]; if (t) pointAt(t.clientX, t.clientY); }, { passive: true });
-  hero.addEventListener("touchmove", (e) => { const t = e.touches[0]; if (t) pointAt(t.clientX, t.clientY); }, { passive: true });
-  hero.addEventListener("touchend", lensOff, { passive: true });
-  hero.addEventListener("touchcancel", lensOff, { passive: true });
+  let hold = null, holdTimer = 0;
+  hero.addEventListener("touchstart", (e) => {
+    const t = e.touches[0]; if (!t || e.touches.length > 1) return;
+    hold = { x: t.clientX, y: t.clientY, active: false };
+    clearTimeout(holdTimer);
+    holdTimer = setTimeout(() => { if (hold) { hold.active = true; pointAt(hold.x, hold.y); if (!lens.on) hold = null; } }, 160);
+  }, { passive: true });
+  hero.addEventListener("touchmove", (e) => {
+    const t = e.touches[0]; if (!t || !hold) return;
+    if (hold.active) { e.preventDefault(); pointAt(t.clientX, t.clientY); return; }
+    if (Math.hypot(t.clientX - hold.x, t.clientY - hold.y) > 10) { clearTimeout(holdTimer); hold = null; } // it is a scroll
+    else { hold.x = t.clientX; hold.y = t.clientY; }
+  }, { passive: false });
+  const touchUp = () => { clearTimeout(holdTimer); hold = null; lensOff(); };
+  hero.addEventListener("touchend", touchUp, { passive: true });
+  hero.addEventListener("touchcancel", touchUp, { passive: true });
   hero.querySelectorAll("img").forEach((img) => img.addEventListener("contextmenu", (e) => e.preventDefault()));
 
   const stepLens = () => {
@@ -500,7 +528,8 @@
     // show only the latest four feed lines
     const on = feedEls.filter((li) => li.classList.contains("on"));
     feedEls.forEach((li) => (li.style.display = ""));
-    on.slice(0, Math.max(0, on.length - 4)).forEach((li) => (li.style.display = "none"));
+    const keep = narrow() ? 2 : 4;
+    on.slice(0, Math.max(0, on.length - keep)).forEach((li) => (li.style.display = "none"));
 
     if (nodeEl) nodeEl.textContent = fmt(nodes);
     if (edgeEl) edgeEl.textContent = fmt(edges);
@@ -595,10 +624,17 @@
   if (lenis) lenis.on("scroll", onScroll);
   window.addEventListener("scroll", onScroll, { passive: true });
   let rt;
+  let lastW = window.innerWidth, lastH = window.innerHeight;
   window.addEventListener("resize", () => {
+    const w = window.innerWidth, h = window.innerHeight;
+    // the address bar on phones changes the height while scrolling; only re-layout on real changes
+    if (w === lastW && Math.abs(h - lastH) < 160) return;
+    lastW = w; lastH = h;
     clearTimeout(rt);
     rt = setTimeout(() => { sizeTopo(); drawTopo(performance.now()); buildGraph(); sizeJourney(); onScroll(); }, 120);
   });
+  window.addEventListener("orientationchange", () => { lastW = -1; });
+
   sizeJourney();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { sizeJourney(); onScroll(); });
   window.addEventListener("load", () => { sizeJourney(); onScroll(); });
