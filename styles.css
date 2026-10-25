@@ -1,3 +1,8 @@
+/* Fonts are served from this site; no third-party requests (GDPR). Archivo: SIL OFL, IBM Plex Mono: SIL OFL. */
+@font-face { font-family: "Archivo"; font-style: normal; font-weight: 100 900; font-stretch: 62% 125%; font-display: swap; src: url("assets/fonts/archivo-var.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 400; font-display: swap; src: url("assets/fonts/plex-mono-400.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500; font-display: swap; src: url("assets/fonts/plex-mono-500.woff2") format("woff2"); }
+
 /* Layout: light "drawing paper" page with topographic lines and one navy plan-grid band for the career timeline.
    Navy ink from the blazer, safety orange from the shop floor as the only accent.
    One type family (Archivo) in several widths; monospace only inside the KI layer, where the machine "speaks". */
