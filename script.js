@@ -5,6 +5,7 @@
   const narrow = () => window.matchMedia("(max-width: 860px)").matches;
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const ease = (t) => 1 - Math.pow(1 - t, 3);
+  const fmt = (n) => Math.round(n).toLocaleString("de-DE");
   document.documentElement.classList.add("anim");
 
   /* ---------- Smooth scrolling ---------- */
@@ -56,8 +57,7 @@
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) vals[j * cols + i] = field(i * cell / 260, j * cell / 260, t);
     tctx.setTransform(tdpr, 0, 0, tdpr, 0, 0);
     tctx.clearRect(0, 0, tw, th);
-    const levels = 11;
-    for (let L = 1; L < levels; L++) {
+    for (let L = 1; L < 11; L++) {
       const iso = 0.18 + L * 0.06;
       tctx.beginPath();
       for (let j = 0; j < rows - 1; j++) for (let i = 0; i < cols - 1; i++) {
@@ -65,19 +65,19 @@
         const idx = (a > iso) | ((b > iso) << 1) | ((c > iso) << 2) | ((d > iso) << 3);
         if (idx === 0 || idx === 15) continue;
         const x = i * cell, y = j * cell;
-        const lerp = (p, q) => (iso - p) / (q - p);
-        const top = [x + cell * lerp(a, b), y], right = [x + cell, y + cell * lerp(b, c)];
-        const bottom = [x + cell * lerp(d, c), y + cell], left = [x, y + cell * lerp(a, d)];
+        const f = (p, q) => (iso - p) / (q - p);
+        const T = [x + cell * f(a, b), y], R = [x + cell, y + cell * f(b, c)];
+        const B = [x + cell * f(d, c), y + cell], Lf = [x, y + cell * f(a, d)];
         const seg = (p, q) => { tctx.moveTo(p[0], p[1]); tctx.lineTo(q[0], q[1]); };
         switch (idx) {
-          case 1: case 14: seg(left, top); break;
-          case 2: case 13: seg(top, right); break;
-          case 3: case 12: seg(left, right); break;
-          case 4: case 11: seg(right, bottom); break;
-          case 5: seg(left, top); seg(right, bottom); break;
-          case 6: case 9: seg(top, bottom); break;
-          case 7: case 8: seg(left, bottom); break;
-          case 10: seg(left, bottom); seg(top, right); break;
+          case 1: case 14: seg(Lf, T); break;
+          case 2: case 13: seg(T, R); break;
+          case 3: case 12: seg(Lf, R); break;
+          case 4: case 11: seg(R, B); break;
+          case 5: seg(Lf, T); seg(R, B); break;
+          case 6: case 9: seg(T, B); break;
+          case 7: case 8: seg(Lf, B); break;
+          case 10: seg(Lf, B); seg(T, R); break;
         }
       }
       tctx.strokeStyle = L % 4 === 0 ? "rgba(13,27,42,.13)" : "rgba(13,27,42,.06)";
@@ -96,137 +96,348 @@
     requestAnimationFrame(loop);
   }
 
-  /* ---------- Hero: knowledge-graph layer ---------- */
+  /* ---------- Hero ---------- */
   const hero = document.querySelector(".hero");
   const scene = document.querySelector(".hero-scene");
   const ghost = document.querySelector(".portrait-ghost");
   const gcan = document.querySelector(".graph");
   const gctx = gcan.getContext("2d");
-  const counter = document.querySelector(".node-count");
-  let nodes = [], edges = [], hubs = [], packets = [], gReady = false, gBox = null, wipeFrac = 1;
+  const nodeEl = document.querySelector(".node-count");
+  const edgeEl = document.querySelector(".edge-count");
+  const artLayer = document.querySelector(".artifacts");
+  const feed = document.querySelector(".feed");
 
-  const HUB_LABELS = ["Maschine", "Auftrag", "Werkzeug", "Störung", "Maßnahme", "Erfahrung", "Prozess"];
-  const HUB_SPOTS = [[0.30, 0.22], [0.66, 0.26], [0.44, 0.42], [0.72, 0.52], [0.26, 0.60], [0.55, 0.78], [0.82, 0.88]];
+  // Concepts that live in the portrait graph from the start.
+  const HUBS = [
+    { label: "Maschine", at: [0.30, 0.22] }, { label: "Auftrag", at: [0.66, 0.26] },
+    { label: "Werkzeug", at: [0.44, 0.42] }, { label: "Störung", at: [0.72, 0.52] },
+    { label: "Maßnahme", at: [0.26, 0.60] }, { label: "Erfahrung", at: [0.55, 0.78] },
+    { label: "Prozess", at: [0.82, 0.88] }
+  ];
+  // Shop-floor artefacts that enrich the graph, one after another while scrolling.
+  // at = cluster centre as a fraction of the hero (always on the KI side, x > 0.5).
+  const ARTIFACTS = [
+    { name: "Arbeitsanweisung Montage", kind: "PDF, 14 Seiten", hub: "Prozess", n: 120, at: [0.80, 0.14] },
+    { name: "SAP-Materialstamm", kind: "Export, 2.380 Zeilen", hub: "Auftrag", n: 170, at: [0.95, 0.25] },
+    { name: "Störmeldungen 2024", kind: "Ticketsystem", hub: "Störung", n: 150, at: [0.60, 0.10] },
+    { name: "Wartungsprotokoll Fräse 3", kind: "Protokoll", hub: "Maschine", n: 110, at: [0.90, 0.80] },
+    { name: "Gespräch mit der Schichtleitung", kind: "Gemba-Notiz", hub: "Erfahrung", n: 90, at: [0.68, 0.88] },
+    { name: "Benchmarking-Kennzahlen", kind: "Datensatz, 20 Betriebe", hub: "Maßnahme", n: 140, at: [0.97, 0.66] },
+    { name: "Produktionsontologie", kind: "OWL-Datei", hub: "Werkzeug", n: 190, at: [0.60, 0.62] }
+  ];
 
-  const buildGraph = () => {
-    const r = ghost.getBoundingClientRect(), hr = hero.getBoundingClientRect();
-    if (!r.width || !ghost.complete || !ghost.naturalWidth) return;
-    gBox = { x: r.left - hr.left, y: r.top - hr.top, w: r.width, h: r.height };
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    gcan.style.left = gBox.x + "px"; gcan.style.top = gBox.y + "px";
-    gcan.style.width = gBox.w + "px"; gcan.style.height = gBox.h + "px";
-    gcan.width = Math.round(gBox.w * dpr); gcan.height = Math.round(gBox.h * dpr);
-    gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  let W = 0, H = 0, dpr = 1;
+  let face = [], faceEdges = [], hubs = [], clusters = [], packets = [];
+  let alpha = null, aw = 0, ah = 0, pBox = null;
+  let hlBox = null;
+  let gReady = false, state = { wipe: 1, faceF: 0, steps: ARTIFACTS.map(() => 0) };
 
-    const sw = 200, sh = Math.round(200 * ghost.naturalHeight / ghost.naturalWidth);
-    const off = document.createElement("canvas"); off.width = sw; off.height = sh;
-    const octx = off.getContext("2d");
-    octx.drawImage(ghost, 0, 0, sw, sh);
-    let data;
-    try { data = octx.getImageData(0, 0, sw, sh).data; } catch (e) { return; }
-    const A = (x, y) => data[(y * sw + x) * 4 + 3];
-    const Lum = (x, y) => { const k = (y * sw + x) * 4; return (data[k] * 0.3 + data[k + 1] * 0.59 + data[k + 2] * 0.11) / 255; };
+  const rng = (seed) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
 
-    let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    const target = narrow() ? 380 : 620;
-    nodes = []; let guard = 0;
-    while (nodes.length < target && guard++ < 60000) {
-      const x = 1 + Math.floor(rnd() * (sw - 2)), y = 1 + Math.floor(rnd() * (sh - 2));
-      if (A(x, y) < 200) continue;
-      const g = Math.abs(Lum(x + 1, y) - Lum(x - 1, y)) + Math.abs(Lum(x, y + 1) - Lum(x, y - 1));
-      if (rnd() > 0.12 + g * 3.2) continue;
-      nodes.push({ x: (x / sw) * gBox.w, y: (y / sh) * gBox.h, p: rnd() * Math.PI * 2 });
-    }
-    edges = [];
-    const maxD = gBox.w * 0.075;
-    for (let i = 0; i < nodes.length; i++) {
+  const knn = (pts, k, maxD) => {
+    const out = [];
+    for (let i = 0; i < pts.length; i++) {
       const near = [];
-      for (let j = 0; j < nodes.length; j++) {
+      for (let j = 0; j < pts.length; j++) {
         if (i === j) continue;
-        const dx = nodes[i].x - nodes[j].x, dy = nodes[i].y - nodes[j].y, d = dx * dx + dy * dy;
+        const d = (pts[i].x - pts[j].x) ** 2 + (pts[i].y - pts[j].y) ** 2;
         if (d < maxD * maxD) near.push([d, j]);
       }
       near.sort((a, b) => a[0] - b[0]);
-      near.slice(0, 3).forEach(([, j]) => { if (j > i) edges.push([i, j]); });
+      near.slice(0, k).forEach(([, j]) => { if (j > i) out.push([i, j]); });
     }
-    hubs = HUB_SPOTS.map(([fx, fy], k) => {
-      const tx = fx * gBox.w, ty = fy * gBox.h;
+    return out;
+  };
+
+  const buildGraph = () => {
+    if (!ghost.complete || !ghost.naturalWidth) return;
+    const hr = hero.getBoundingClientRect(), r = ghost.getBoundingClientRect();
+    W = hr.width; H = hr.height;
+    pBox = { x: r.left - hr.left, y: r.top - hr.top, w: r.width, h: r.height };
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    gcan.width = Math.round(W * dpr); gcan.height = Math.round(H * dpr);
+    gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    aw = 200; ah = Math.round(200 * ghost.naturalHeight / ghost.naturalWidth);
+    const off = document.createElement("canvas"); off.width = aw; off.height = ah;
+    const octx = off.getContext("2d");
+    octx.drawImage(ghost, 0, 0, aw, ah);
+    let data;
+    try { data = octx.getImageData(0, 0, aw, ah).data; } catch (e) { return; }
+    alpha = new Uint8Array(aw * ah);
+    for (let i = 0; i < aw * ah; i++) alpha[i] = data[i * 4 + 3];
+    const lum = (x, y) => { const k = (y * aw + x) * 4; return (data[k] * 0.3 + data[k + 1] * 0.59 + data[k + 2] * 0.11) / 255; };
+
+    const rnd = rng(11);
+    const small = narrow();
+    const target = small ? 360 : 620;
+    face = []; let guard = 0;
+    while (face.length < target && guard++ < 80000) {
+      const x = 1 + Math.floor(rnd() * (aw - 2)), y = 1 + Math.floor(rnd() * (ah - 2));
+      if (alpha[y * aw + x] < 200) continue;
+      const g = Math.abs(lum(x + 1, y) - lum(x - 1, y)) + Math.abs(lum(x, y + 1) - lum(x, y - 1));
+      if (rnd() > 0.12 + g * 3.2) continue;
+      face.push({ x: pBox.x + (x / aw) * pBox.w, y: pBox.y + (y / ah) * pBox.h, p: rnd() * 6.28 });
+    }
+    faceEdges = knn(face, 3, pBox.w * 0.075);
+    hubs = HUBS.map((h) => {
+      const tx = pBox.x + h.at[0] * pBox.w, ty = pBox.y + h.at[1] * pBox.h;
       let best = 0, bd = Infinity;
-      nodes.forEach((n, i) => { const d = (n.x - tx) ** 2 + (n.y - ty) ** 2; if (d < bd) { bd = d; best = i; } });
-      return { i: best, label: HUB_LABELS[k] };
+      face.forEach((n, i) => { const d = (n.x - tx) ** 2 + (n.y - ty) ** 2; if (d < bd) { bd = d; best = i; } });
+      return { i: best, label: h.label };
     });
-    packets = Array.from({ length: narrow() ? 10 : 18 }, () => ({ e: Math.floor(rnd() * edges.length), t: rnd(), s: 0.006 + rnd() * 0.01 }));
+
+    // Artefact clusters: blobs of nodes, ordered from the centre outwards so they grow.
+    const scale = small ? 0.55 : 1;
+    const R = Math.min(W, H) * (small ? 0.16 : 0.11);
+    clusters = ARTIFACTS.map((a, k) => {
+      const cr = rng(101 + k * 17);
+      const cx = a.at[0] * W, cy = (small ? 0.46 + a.at[1] * 0.48 : a.at[1]) * H;
+      const n = Math.round(a.n * scale);
+      const pts = [];
+      for (let i = 0; i < n; i++) {
+        const ang = cr() * 6.283, rad = R * Math.sqrt(-2 * Math.log(1 - cr() * 0.98)) * 0.55;
+        pts.push({ x: cx + Math.cos(ang) * rad * 1.25, y: cy + Math.sin(ang) * rad, p: cr() * 6.28 });
+      }
+      pts.sort((p, q) => ((p.x - cx) ** 2 + (p.y - cy) ** 2) - ((q.x - cx) ** 2 + (q.y - cy) ** 2));
+      const edges = knn(pts, 3, R * 0.5).map(([i, j]) => [i, j, Math.max(i, j)]);
+      const hub = hubs.find((h) => h.label === a.hub);
+      return { a, cx, cy, pts, edges, hub, bridges: [] };
+    });
+    // A few bridges from each cluster into the existing graph (portrait or earlier clusters).
+    clusters.forEach((c, k) => {
+      const pool = face.map((n) => n).concat(...clusters.slice(0, k).map((o) => o.pts));
+      const picks = [Math.floor(c.pts.length * 0.15), Math.floor(c.pts.length * 0.5), Math.floor(c.pts.length * 0.85)];
+      picks.forEach((pi) => {
+        const p = c.pts[pi]; let best = null, bd = Infinity;
+        pool.forEach((q) => { const d = (p.x - q.x) ** 2 + (p.y - q.y) ** 2; if (d < bd) { bd = d; best = q; } });
+        if (best) c.bridges.push([pi, best]);
+      });
+    });
+
+    const pr = rng(5);
+    packets = Array.from({ length: small ? 10 : 18 }, () => ({ e: Math.floor(pr() * faceEdges.length), t: pr(), s: 0.006 + pr() * 0.01, dir: 1 }));
     gReady = true;
+    buildArtifacts();
+    fitHeadlines();
+    updateHero();
     drawGraph(performance.now());
   };
 
+  /* Artefact cards (DOM) and feed lines */
+  let artEls = [], feedEls = [];
+  const buildArtifacts = () => {
+    artLayer.innerHTML = ""; feed.innerHTML = "";
+    artEls = ARTIFACTS.map((a) => {
+      const el = document.createElement("div");
+      el.className = "artifact";
+      el.innerHTML = `<i></i><b></b><small></small>`;
+      el.querySelector("b").textContent = a.name;
+      el.querySelector("small").textContent = a.kind;
+      artLayer.appendChild(el);
+      return el;
+    });
+    feedEls = clusters.map((c) => {
+      const li = document.createElement("li");
+      li.innerHTML = `<b>+${fmt(c.pts.length)}</b> Knoten<span class="src"> aus „<span></span>“</span>`;
+      li.querySelector(".src span").textContent = c.a.name;
+      feed.appendChild(li);
+      return li;
+    });
+  };
+
+  /* Keep both headlines clear of the portrait silhouette, so no letter sits on hair or blazer. */
+  const fitHeadlines = () => {
+    if (!alpha || !pBox) return;
+    hero.style.removeProperty("--hl-fs");
+    const base = [...hero.querySelectorAll(".hero-base .hl")];
+    const hr = hero.getBoundingClientRect();
+    const silhouette = (top, bottom) => {
+      let minX = Infinity, maxX = -Infinity;
+      const y0 = Math.max(0, Math.floor((top - pBox.y) / pBox.h * ah));
+      const y1 = Math.min(ah - 1, Math.ceil((bottom - pBox.y) / pBox.h * ah));
+      for (let y = y0; y <= y1; y++) for (let x = 0; x < aw; x++) {
+        if (alpha[y * aw + x] > 40) { if (x < minX) minX = x; if (x > maxX) maxX = x; }
+      }
+      if (minX === Infinity) return null;
+      return { left: pBox.x + minX / aw * pBox.w, right: pBox.x + (maxX + 1) / aw * pBox.w };
+    };
+    let fs = parseFloat(getComputedStyle(base[0]).fontSize);
+    const gap = Math.max(16, W * 0.018);
+    for (let pass = 0; pass < 4; pass++) {
+      let scale = 1;
+      base.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        const top = r.top - hr.top, bottom = r.bottom - hr.top;
+        const width = Math.max(...[...el.children].map((s) => s.getBoundingClientRect().width));
+        const sil = silhouette(top, bottom);
+        if (!sil) return;
+        const isLeft = el.classList.contains("hl-left");
+        const avail = isLeft ? sil.left - gap - (r.left - hr.left) : (r.right - hr.left) - sil.right - gap;
+        if (avail < width) scale = Math.min(scale, Math.max(avail, 0) / width);
+      });
+      if (scale >= 0.995) break;
+      fs = Math.max(26, fs * scale * 0.99);
+      hero.style.setProperty("--hl-fs", fs.toFixed(1) + "px");
+    }
+    const rr = hero.querySelector(".hero-ai .hl-right").getBoundingClientRect();
+    hlBox = { left: rr.left - hr.left, right: rr.right - hr.left, top: rr.top - hr.top, bottom: rr.bottom - hr.top };
+  };
+
+  const nodeVisibleCount = (c, f) => Math.floor(c.pts.length * f);
+
   const drawGraph = (now) => {
     if (!gReady) return;
-    gctx.clearRect(0, 0, gBox.w, gBox.h);
+    gctx.clearRect(0, 0, W, H);
+    const faceCount = Math.floor(face.length * state.faceF);
+
+    // edges
     gctx.lineWidth = 0.7;
     gctx.strokeStyle = "rgba(236,238,241,.22)";
     gctx.beginPath();
-    edges.forEach(([a, b]) => { gctx.moveTo(nodes[a].x, nodes[a].y); gctx.lineTo(nodes[b].x, nodes[b].y); });
+    faceEdges.forEach(([a, b]) => { if (a < faceCount && b < faceCount || state.faceF >= 1) { gctx.moveTo(face[a].x, face[a].y); gctx.lineTo(face[b].x, face[b].y); } });
+    clusters.forEach((c, k) => {
+      const vis = nodeVisibleCount(c, state.steps[k]);
+      c.edges.forEach(([a, b, m]) => { if (m < vis) { gctx.moveTo(c.pts[a].x, c.pts[a].y); gctx.lineTo(c.pts[b].x, c.pts[b].y); } });
+      c.bridges.forEach(([pi, q]) => { if (pi < vis) { gctx.moveTo(c.pts[pi].x, c.pts[pi].y); gctx.lineTo(q.x, q.y); } });
+    });
     gctx.stroke();
+
+    // links from each cluster to its concept in the portrait
+    gctx.strokeStyle = "rgba(242,107,29,.55)";
+    gctx.lineWidth = 1;
+    gctx.setLineDash([3, 4]);
+    gctx.beginPath();
+    clusters.forEach((c, k) => {
+      if (state.steps[k] <= 0 || !c.pts.length) return;
+      const h = face[c.hub.i], p = c.pts[0];
+      const f = clamp(state.steps[k] * 3);
+      gctx.moveTo(p.x, p.y); gctx.lineTo(p.x + (h.x - p.x) * f, p.y + (h.y - p.y) * f);
+    });
+    gctx.stroke();
+    gctx.setLineDash([]);
+
+    // nodes
     gctx.fillStyle = "rgba(236,238,241,.85)";
-    nodes.forEach((n) => {
-      const r = 1 + 0.5 * Math.sin(now * 0.002 + n.p);
+    for (let i = 0; i < faceCount || (state.faceF >= 1 && i < face.length); i++) {
+      const n = face[i]; const r = 1 + 0.5 * Math.sin(now * 0.002 + n.p);
       gctx.fillRect(n.x - r * 0.75, n.y - r * 0.75, r * 1.5, r * 1.5);
+    }
+    clusters.forEach((c, k) => {
+      const exact = c.pts.length * state.steps[k];
+      const vis = Math.floor(exact);
+      for (let i = 0; i < vis; i++) {
+        const n = c.pts[i];
+        const fresh = exact - i < 14;
+        const r = (fresh ? 1.9 : 1) + 0.5 * Math.sin(now * 0.002 + n.p);
+        gctx.fillStyle = fresh ? "#F26B1D" : "rgba(236,238,241,.78)";
+        gctx.fillRect(n.x - r * 0.75, n.y - r * 0.75, r * 1.5, r * 1.5);
+      }
     });
-    gctx.fillStyle = "#F26B1D";
-    packets.forEach((pk) => {
-      const [a, b] = edges[pk.e] || [0, 0];
-      const x = nodes[a].x + (nodes[b].x - nodes[a].x) * pk.t, y = nodes[a].y + (nodes[b].y - nodes[a].y) * pk.t;
-      gctx.beginPath(); gctx.arc(x, y, 2, 0, Math.PI * 2); gctx.fill();
-    });
+
+    // query packets travelling through the portrait graph
+    if (state.faceF > 0.5) {
+      gctx.fillStyle = "#F26B1D";
+      packets.forEach((pk) => {
+        const e = faceEdges[pk.e]; if (!e) return;
+        const [a, b] = pk.dir > 0 ? e : [e[1], e[0]];
+        const x = face[a].x + (face[b].x - face[a].x) * pk.t, y = face[a].y + (face[b].y - face[a].y) * pk.t;
+        gctx.beginPath(); gctx.arc(x, y, 2, 0, 6.283); gctx.fill();
+      });
+    }
+
+    // concept labels
     gctx.font = "500 10px 'IBM Plex Mono', monospace";
     gctx.textBaseline = "middle";
     hubs.forEach((h, k) => {
-      const n = nodes[h.i];
+      const n = face[h.i];
       const pulse = 4 + 2 * Math.sin(now * 0.003 + k);
       gctx.strokeStyle = "rgba(242,107,29,.55)"; gctx.lineWidth = 1;
-      gctx.beginPath(); gctx.arc(n.x, n.y, pulse + 4, 0, Math.PI * 2); gctx.stroke();
+      gctx.beginPath(); gctx.arc(n.x, n.y, pulse + 4, 0, 6.283); gctx.stroke();
       gctx.fillStyle = "#F26B1D";
-      gctx.beginPath(); gctx.arc(n.x, n.y, 3.2, 0, Math.PI * 2); gctx.fill();
-      const text = h.label.toUpperCase(), tw2 = gctx.measureText(text).width;
-      const flip = n.x + tw2 + 24 > gBox.w;
+      gctx.beginPath(); gctx.arc(n.x, n.y, 3.2, 0, 6.283); gctx.fill();
+      const tw2 = gctx.measureText(h.label).width;
+      const flip = n.x + tw2 + 30 > W;
       const bx = flip ? n.x - tw2 - 19 : n.x + 9;
       gctx.fillStyle = "rgba(10,21,34,.85)"; gctx.fillRect(bx, n.y - 8, tw2 + 10, 16);
-      gctx.fillStyle = "#ECEEF1"; gctx.fillText(text, bx + 5, n.y + 0.5);
+      gctx.fillStyle = "#ECEEF1"; gctx.fillText(h.label, bx + 5, n.y + 0.5);
     });
   };
+
   const stepPackets = () => packets.forEach((pk) => {
     pk.t += pk.s;
-    if (pk.t >= 1) {
-      const end = edges[pk.e][1];
-      const next = edges.map((e, i) => (e[0] === end || e[1] === end) ? i : -1).filter((i) => i >= 0);
-      pk.e = next.length ? next[Math.floor(Math.random() * next.length)] : Math.floor(Math.random() * edges.length);
-      if (edges[pk.e][0] !== end) edges[pk.e] = [edges[pk.e][1], edges[pk.e][0]];
-      pk.t = 0;
-    }
+    if (pk.t < 1) return;
+    const e = faceEdges[pk.e]; const end = pk.dir > 0 ? e[1] : e[0];
+    const next = [];
+    for (let i = 0; i < faceEdges.length; i++) { const f = faceEdges[i]; if (i !== pk.e && (f[0] === end || f[1] === end)) next.push(i); }
+    pk.e = next.length ? next[Math.floor(Math.random() * next.length)] : Math.floor(Math.random() * faceEdges.length);
+    pk.dir = faceEdges[pk.e][0] === end ? 1 : -1;
+    pk.t = 0;
   });
+
+  // Scroll timeline of the hero, as fractions of the pinned distance.
+  const WIPE = [0.03, 0.22], ENRICH = [0.25, 0.95];
 
   const updateHero = () => {
     const total = scene.offsetHeight - window.innerHeight;
-    const p = total > 0 ? clamp(-scene.getBoundingClientRect().top / total) : 1;
-    const w = reduce ? 0.5 : 1 - 0.5 * ease(clamp((p - 0.08) / 0.62));
-    wipeFrac = w;
-    hero.style.setProperty("--wipe", (w * 100).toFixed(2) + "%");
-    hero.classList.toggle("wiping", w < 0.995);
-    hero.classList.toggle("scrolled", p > 0.02);
-    if (counter && nodes.length) counter.textContent = Math.round(nodes.length * clamp((1 - w) * 2)).toLocaleString("de-DE");
+    const p = reduce ? 1 : (total > 0 ? clamp(-scene.getBoundingClientRect().top / total) : 1);
+    const wp = ease(clamp((p - WIPE[0]) / (WIPE[1] - WIPE[0])));
+    state.wipe = 1 - 0.5 * wp;
+    state.faceF = wp;
+    hero.style.setProperty("--wipe", (state.wipe * 100).toFixed(2) + "%");
+    hero.classList.toggle("wiping", state.wipe < 0.995);
+    hero.classList.toggle("scrolled", p > 0.015);
+
+    const seg = (ENRICH[1] - ENRICH[0]) / ARTIFACTS.length;
+    let nodes = face.length * state.faceF, edges = faceEdges.length * state.faceF;
+    ARTIFACTS.forEach((a, k) => {
+      const s = clamp((p - ENRICH[0] - k * seg) / seg); // 0..1 within this artefact's step
+      const grow = ease(clamp((s - 0.38) / 0.55));
+      state.steps[k] = grow;
+      const c = clusters[k];
+      if (c) {
+        const vis = nodeVisibleCount(c, grow);
+        nodes += vis;
+        edges += c.edges.filter((e) => e[2] < vis).length + c.bridges.filter((b) => b[0] < vis).length;
+      }
+      // card flies in from the right edge, lands on its cluster and dissolves
+      const el = artEls[k];
+      if (el && c) {
+        const fly = ease(clamp(s / 0.45));
+        const cw = el.offsetWidth || 230, ch = el.offsetHeight || 52;
+        const x0 = W + 20, y0 = c.cy - ch / 2 + (1 - fly) * 40;
+        const x1 = Math.max(W * 0.5 + 10, Math.min(c.cx - cw / 2, W - cw - 12));
+        let y1 = Math.min(Math.max(c.cy - ch / 2, 70), H - ch - 120);
+        if (hlBox && x1 < hlBox.right && x1 + cw > hlBox.left && y1 < hlBox.bottom + 8 && y1 + ch > hlBox.top - 8) {
+          y1 = (c.cy < (hlBox.top + hlBox.bottom) / 2) ? hlBox.top - ch - 12 : hlBox.bottom + 12;
+        }
+        const x = x0 + (x1 - x0) * fly, y = y0 + (y1 - y0) * fly;
+        const out = clamp((s - 0.42) / 0.2);
+        const op = s <= 0 || s >= 0.62 ? 0 : (s < 0.06 ? s / 0.06 : 1 - out);
+        el.style.opacity = op.toFixed(3);
+        el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0) scale(${(1 - out * 0.35).toFixed(3)})`;
+      }
+      if (feedEls[k]) feedEls[k].classList.toggle("on", s > 0.55);
+    });
+    // show only the latest four feed lines
+    const on = feedEls.filter((li) => li.classList.contains("on"));
+    feedEls.forEach((li) => (li.style.display = ""));
+    on.slice(0, Math.max(0, on.length - 4)).forEach((li) => (li.style.display = "none"));
+
+    if (nodeEl) nodeEl.textContent = fmt(nodes);
+    if (edgeEl) edgeEl.textContent = fmt(edges);
+    if (gReady && (reduce || document.hidden)) drawGraph(performance.now());
   };
 
   const heroLoop = (now) => {
     const r = scene.getBoundingClientRect();
     const visible = r.bottom > 0 && r.top < window.innerHeight;
-    if (visible && wipeFrac < 0.995 && !document.hidden) { stepPackets(); drawGraph(now); }
+    if (visible && state.wipe < 0.995 && !document.hidden) { stepPackets(); drawGraph(now); }
     requestAnimationFrame(heroLoop);
   };
 
-  const initGraph = () => { buildGraph(); updateHero(); };
-  if (ghost.complete) initGraph(); else ghost.addEventListener("load", initGraph);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => gReady && drawGraph(performance.now()));
+  if (ghost.complete) buildGraph(); else ghost.addEventListener("load", buildGraph);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitHeadlines(); gReady && drawGraph(performance.now()); });
   if (!reduce) requestAnimationFrame(heroLoop);
 
   /* ---------- Journey: horizontal pinned timeline ---------- */
@@ -238,7 +449,7 @@
   ticksEl.innerHTML = cards.map((c) => `<li><b>${c.dataset.year}</b><span>${c.dataset.short}</span></li>`).join("");
   const ticks = [...ticksEl.children];
   const aiIndex = cards.findIndex((c) => c.dataset.year === "2021");
-  document.querySelector(".progress").style.setProperty("--phase-at", `calc(${(aiIndex / (cards.length - 1)) * 100}% - 4em)`);
+  document.querySelector(".progress").style.setProperty("--phase-at", `calc(${(aiIndex / (cards.length - 1)) * 100}% - 3em)`);
   let travel = 0;
 
   const sizeJourney = () => {
@@ -247,15 +458,15 @@
       cards.forEach((c) => c.classList.remove("active"));
       return;
     }
+    const lastCard = cards[cards.length - 1];
     const gutR = parseFloat(getComputedStyle(track).paddingRight) || 0;
-    travel = Math.max(0, track.scrollWidth - window.innerWidth + gutR * 0);
+    travel = Math.max(0, lastCard.offsetLeft + lastCard.offsetWidth + gutR - window.innerWidth);
     journey.style.height = (window.innerHeight + travel) + "px";
   };
 
   const updateJourney = () => {
     if (!travel) return;
-    const r = journey.getBoundingClientRect();
-    const p = clamp(-r.top / travel);
+    const p = clamp(-journey.getBoundingClientRect().top / travel);
     track.style.transform = `translate3d(${(-p * travel).toFixed(1)}px,0,0)`;
     barFill.style.width = (p * 100).toFixed(2) + "%";
     const active = Math.round(p * (cards.length - 1));
@@ -292,7 +503,7 @@
       const link = document.querySelector(".contact .email");
       const range = document.createRange(); range.selectNodeContents(link);
       const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-      copyBtn.textContent = "Markiert, jetzt kopieren";
+      copyBtn.textContent = "Markiert, bitte kopieren";
     };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(email).then(done, fallback);
     else fallback();
